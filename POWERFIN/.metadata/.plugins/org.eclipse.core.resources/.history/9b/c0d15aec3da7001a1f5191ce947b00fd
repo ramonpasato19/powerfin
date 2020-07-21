@@ -1,0 +1,224 @@
+package com.powerfin.model;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.openxava.annotations.DescriptionsList;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.ReferenceView;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.SearchAction;
+import org.openxava.annotations.Tab;
+import org.openxava.annotations.Tabs;
+import org.openxava.annotations.View;
+import org.openxava.annotations.Views;
+
+import com.powerfin.model.superclass.CompleteAuditEntity;
+
+/**
+ * This persistent class for payroll holidays
+ * @author Wilson Cajisaca
+ */
+
+
+@Entity
+@Table(name = "payroll_holidays")
+@Views({
+	@View(members = "payrollHolidaysId;"
+			+ "employeePerson;"
+			+ "payroll_holidays[payrollHolidaysType;"
+			+ "accountStatus;"
+			+ "numberDaysProvision;"
+			+ "monetaryValue;"
+			+ "applicationDate;"
+			+ "approvalDate;"
+			+ "dateOut;"
+			+ "dateIn;"
+			+ "remark"
+			+ "]"),
+	@View(name = "Authorize", members = "employeePerson;"
+				+ "work_absenteeism[payrollHolidaysType;"
+									+ "accountStatus;"
+									+ "numberDaysProvision;"
+									+ "monetaryValue;"
+									+ "applicationDate;"
+									+ "approvalDate;"
+									+ "dateOut;"
+									+ "dateIn;"
+									+ "remark"
+								+ "]"
+								)})
+@Tabs({
+	@Tab(name = "AuthorizeTab", properties = "payrollHolidaysId,payrollHolidaysType.name,accountStatus.name,applicationDate,approvalDate,remark",
+			baseCondition = "${accountStatus.accountStatusId} IN ('001','002')"),
+	@Tab(name = "AuthorizedTab",properties = "payrollHolidaysId,payrollHolidaysType.name,accountStatus.name,applicationDate,approvalDate,remark",
+			baseCondition = "${accountStatus.accountStatusId} != '001'"),
+	@Tab(properties = "payrollHolidaysId,payrollHolidaysType.name,accountStatus.name,applicationDate,approvalDate,remark")
+})
+
+public class PayrollHolidays extends CompleteAuditEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	@Id
+	@Column(name = "payroll_holidays_id", unique = true, length = 20)
+	@ReadOnly
+	private String payrollHolidaysId;
+	
+	@ManyToOne
+	@JoinColumn(name = "person_id", nullable = false)
+	@ReferenceView("simple")
+	@NoCreate
+	@NoModify
+	@Required
+	@ReadOnly(forViews = "Authorize")
+	@SearchAction(value = "PersonEmployeeSearchController.search")
+	private Person employeePerson;
+	
+	@ManyToOne
+	@JoinColumn(name = "payroll_holidays_type_id")
+	@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	@Required
+	@ReadOnly(forViews = "Authorize")
+	private PayrollHolidaysType payrollHolidaysType;
+	
+	@ManyToOne
+	@JoinColumn(name = "account_status_id")
+	@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	@Required
+	@ReadOnly(notForViews = "Authorize")
+	private AccountStatus accountStatus;
+	
+	@Column(name="number_days_provision")
+	private Integer numberDaysProvision;
+	
+	@Column(name="monetary_value")
+	private BigDecimal monetaryValue;
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="application_date")
+	@ReadOnly
+	private Date applicationDate;
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="approval_date")
+	@ReadOnly
+	private Date approvalDate;
+	
+	@Temporal(TemporalType.DATE)
+	@Column(name="date_out")
+	@Required
+	private Date dateOut;
+	
+	@Temporal(TemporalType.DATE)
+	@Column(name="date_in")
+	@Required
+	private Date dateIn;
+	
+	@Column
+	private String remark;
+
+	public String getPayrollHolidaysId() {
+		return payrollHolidaysId;
+	}
+
+	public void setPayrollHolidaysId(String payrollHolidaysId) {
+		this.payrollHolidaysId = payrollHolidaysId;
+	}
+
+	public Person getEmployeePerson() {
+		return employeePerson;
+	}
+
+	public void setEmployeePerson(Person employeePerson) {
+		this.employeePerson = employeePerson;
+	}
+
+	public PayrollHolidaysType getPayrollHolidaysType() {
+		return payrollHolidaysType;
+	}
+
+	public void setPayrollHolidaysType(PayrollHolidaysType payrollHolidaysType) {
+		this.payrollHolidaysType = payrollHolidaysType;
+	}
+
+	public AccountStatus getAccountStatus() {
+		return accountStatus;
+	}
+
+	public void setAccountStatus(AccountStatus accountStatus) {
+		this.accountStatus = accountStatus;
+	}
+
+	public Integer getNumberDaysProvision() {
+		return numberDaysProvision;
+	}
+
+	public void setNumberDaysProvision(Integer numberDaysProvision) {
+		this.numberDaysProvision = numberDaysProvision;
+	}
+
+	public BigDecimal getMonetaryValue() {
+		return monetaryValue;
+	}
+
+	public void setMonetaryValue(BigDecimal monetaryValue) {
+		this.monetaryValue = monetaryValue;
+	}
+
+	public Date getApplicationDate() {
+		return applicationDate;
+	}
+
+	public void setApplicationDate(Date applicationDate) {
+		this.applicationDate = applicationDate;
+	}
+
+	public Date getApprovalDate() {
+		return approvalDate;
+	}
+
+	public void setApprovalDate(Date approvalDate) {
+		this.approvalDate = approvalDate;
+	}
+
+	public Date getDateOut() {
+		return dateOut;
+	}
+
+	public void setDateOut(Date dateOut) {
+		this.dateOut = dateOut;
+	}
+
+	public Date getDateIn() {
+		return dateIn;
+	}
+
+	public void setDateIn(Date dateIn) {
+		this.dateIn = dateIn;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+	
+}

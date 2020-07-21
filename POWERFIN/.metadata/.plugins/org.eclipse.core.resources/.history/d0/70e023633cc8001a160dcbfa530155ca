@@ -1,0 +1,32 @@
+package com.powerfin.calculators;
+import org.openxava.actions.*;
+import com.creditflow.model.*;
+
+public class ChangeForPayrollVacation extends OnChangePropertyBaseAction{
+
+	@Override
+	public void execute() throws Exception {
+		
+		getView().setHidden("insurancePeriod", true);
+		
+		Application.YesOrNot insuranceFinanced = (Application.YesOrNot) getNewValue();
+		
+		if(insuranceFinanced != null){
+			
+			if(insuranceFinanced.equals(Application.YesOrNot.NO)){
+				
+				getView().setHidden("insurancePeriod", false);
+				getView().setHidden("vehicleInsurance", true);
+				getView().setHidden("insureType",false);
+				
+			}else{
+				getView().setHidden("insurancePeriod", true);
+				getView().setHidden("vehicleInsurance", false);
+				getView().setHidden("insureType",true);
+			}
+			getView().getRoot().setValue("insureType", Quotation.InsureType.NO);
+		
+		}
+			
+	}
+}

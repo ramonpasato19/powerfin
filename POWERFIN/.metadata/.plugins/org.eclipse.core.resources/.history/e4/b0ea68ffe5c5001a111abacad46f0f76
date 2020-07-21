@@ -1,0 +1,73 @@
+package com.powerfin.task;
+
+import java.util.Date;
+import java.util.List;
+
+import org.openxava.jpa.XPersistence;
+import org.openxava.util.Users;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+
+import com.powerfin.exception.OperativeException;
+import com.powerfin.helper.NotificationHelper;
+import com.powerfin.model.Notification;
+import com.powerfin.model.NotificationStatus;
+import com.powerfin.util.UtilApp;
+
+@DisallowConcurrentExecution
+public class EmailNotification implements Job {
+
+	@Override
+	public void execute(JobExecutionContext context) throws JobExecutionException {
+		
+		JobDataMap dataMap = context.getJobDetail().getJobDataMap();
+		
+		System.out.println("Task "+dataMap.get("SCHEMA")+"."+dataMap.get("TASK_ID")+" start at "+ UtilApp.dateToString(new Date(), UtilApp.completeFormatDate));
+		String schema = (String) dataMap.get("SCHEMA");
+		XPersistence.setDefaultSchema(schema);
+		Users.setCurrent("task");
+		
+		NotificationHelper notificationHelper = new NotificationHelper();
+		
+		List<Notification> notifications = XPersistence.getManager()
+				.createQuery("SELECT o FROM Notification o "
+						+ "WHERE o.notificationStatus.notificationStatusId = :requestStatusId "
+						+ "AND o.notificationType.notificationTypeId = :notificationTypeId "
+						+ "ORDER BY o.priority, o.registrationDate ", Notification.class)
+				.setParameter("requestStatusId", NotificationHelper.REQUEST_STATUS_ID)
+				.setParameter("notificationTypeId", NotificationHelper.EMAIL_TYPE_ID)
+				.setMaxResults(1)
+				.getResultList();
+		
+		for (Notification n : notifications)
+		{
+			System.out.println("Send "+dataMap.get("SCHEMA")+".email id:"+n.getNotificationId());
+			try
+			{
+				notificationHelper.sendEmail(n);
+				n.setResponse("DONE");
+				n.setDeliveryDate(new Date());
+				n.setNotificationStatus(XPersistence.getManager().find(NotificationStatus.class, NotificationHelper.SENT_STATUS_ID));
+				XPersistence.getManager().merge(n);
+			} catch (OperativeException oe)
+			{
+				n.setResponse(oe.getLocalizedMessage());
+				n.setNotificationStatus(XPersistence.getManager().find(NotificationStatus.class, NotificationHelper.ERROR_STATUS_ID));
+				XPersistence.getManager().merge(n);
+			} catch (Exception e)
+			{
+				n.setResponse(e.getLocalizedMessage());
+				n.setNotificationStatus(XPersistence.getManager().find(NotificationStatus.class, NotificationHelper.ERROR_STATUS_ID));
+				XPersistence.getManager().merge(n);
+			}
+			
+		}
+			
+		XPersistence.commit();
+		Users.setCurrent("");
+	}	
+	
+}

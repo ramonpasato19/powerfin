@@ -1,0 +1,117 @@
+package com.powerfin.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.openxava.annotations.DescriptionsList;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.ReferenceView;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.Stereotype;
+import org.openxava.annotations.Tab;
+import org.openxava.annotations.View;
+import org.openxava.annotations.Views;
+
+import com.powerfin.actions.search.PayrollConsolidated;
+import com.powerfin.model.superclass.CompleteAuditEntity;
+
+/**
+ *	@author LuisRamon
+ *	Entity to persistence for Load payroll item
+ * */
+      
+@Entity
+@Table(name="payroll_item_load")
+@Views({
+	@View(name="test",members=" payrollItem; file; remark;") //payrollItem;  payrollConsolidated; file;
+	//@View(name="PayrollItemLoads", members="payrollItem.payrollItemId; payrollItem.name; file; remark;")
+})
+//@Tab(properties = "payrollItem, payrollConsolidated, remark")
+public class PayrollItemLoad extends CompleteAuditEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@Column(name = "payroll_item_load_id", unique = true, nullable = false, length = 32)
+	@GeneratedValue(generator = "system-uuid")
+	@GenericGenerator(name = "system-uuid", strategy = "uuid")
+	private String payrollItemLoadId;
+	
+	@ManyToOne
+	@JoinColumn(name="payroll_item_id", nullable=true)
+	@ReferenceView("PayRollDetail")
+	//@DescriptionsList(descriptionProperties = "payrollItemId,account,name")
+	@NoCreate
+	@NoModify
+	private PayrollItem payrollItem;
+	
+	@ManyToOne
+	@JoinColumn(name="payroll_consolidated_id", nullable=true)
+	//@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	private PayrollConsolidated payrollConsolidated;
+	
+	@Stereotype("FILE")
+	@Column(name="file_id",length = 32)
+	@Required
+	private String file;
+	
+	@Column(name = "remark", length=200)
+	private String remark;
+	
+
+	
+	
+	
+
+	public String getPayrollItemLoadId() {
+		return payrollItemLoadId;
+	}
+
+	public void setPayrollItemLoadId(String payrollItemLoadId) {
+		this.payrollItemLoadId = payrollItemLoadId;
+	}
+
+	public PayrollItem getPayrollItem() {
+		return payrollItem;
+	}
+
+	public void setPayrollItem(PayrollItem payrollItem) {
+		this.payrollItem = payrollItem;
+	}
+
+	public PayrollConsolidated getPayrollConsolidated() {
+		return payrollConsolidated;
+	}
+
+	public void setPayrollConsolidated(PayrollConsolidated payrollConsolidated) {
+		this.payrollConsolidated = payrollConsolidated;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+	public String getFile() {
+		return file;
+	}
+
+	public void setFile(String file) {
+		this.file = file;
+	}	
+}

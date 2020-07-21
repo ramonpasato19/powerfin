@@ -1,0 +1,107 @@
+package com.powerfin.model.superclass;
+
+
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import javax.persistence.Column;
+import javax.persistence.JoinColumn;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.OneToOne;
+
+import org.openxava.annotations.PreCreate;
+
+import com.powerfin.exception.OperativeException;
+import com.powerfin.model.Digital;
+import com.powerfin.model.Person;
+import com.powerfin.model.Printed;
+
+
+
+@MappedSuperclass
+public class Book {
+	
+	@Column(name="author", nullable=false, length=30)
+	private String author;
+	
+	@Column(name="title", nullable=false, length=30)
+	private String title;
+	
+	@Column(name="edition", nullable=false, length=30)
+	private String edition;
+	
+	@Column(name="price", nullable = false, precision=11, scale=2)
+	private BigDecimal price;
+
+//	@OneToOne
+//	@JoinColumn(name="digital_id", nullable=false, insertable=false, updatable=false)
+//	private Digital digital;
+//	
+//	@OneToOne
+//	@JoinColumn(name="printed_id", nullable=false, insertable=false, updatable=false)
+//	private Printed printed;
+	
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getEdition() {
+		return edition;
+	}
+
+	public void setEdition(String edition) {
+		this.edition = edition;
+	}
+
+	public BigDecimal getPrice() {
+		return price;
+	}
+
+	public void setPrice(BigDecimal price) {
+		this.price = price;
+	}
+
+//	@PreCreate
+//	public void onCreate()
+//	{
+//		updatePrices();
+//	}
+//	
+//	public void updatePrices()
+//	{
+//
+//		price = calculatePrice();
+//
+//	}
+//	
+//	
+//	public BigDecimal calculatePrice() {
+//		BigDecimal amount = BigDecimal.ZERO;
+//		
+//		if (getPrice()!=null && getPrice().compareTo(BigDecimal.ZERO)>0)
+//		{
+//			amount = getPrice().multiply(getCompleteUnitPrice());
+//		}
+//		else
+//			throw new OperativeException("detail_have_incorrect_quantity");
+//		
+//		return amount.setScale(6, RoundingMode.HALF_UP);
+//	}
+//	
+
+
+
+}

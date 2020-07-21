@@ -1,0 +1,143 @@
+package com.powerfin.task;
+
+import java.util.Date;
+import java.util.List;
+
+import org.openxava.jpa.XPersistence;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+
+import com.openxava.naviox.model.Organization;
+import com.powerfin.helper.NotificationHelper;
+import com.powerfin.model.Notification;
+import com.powerfin.model.NotificationStatus;
+import com.powerfin.model.dto.SMSChannelDTO;
+import com.powerfin.util.UtilApp;
+
+@DisallowConcurrentExecution
+public class SmsNotification implements Job {
+
+	@Override
+	public void execute(JobExecutionContext context) throws JobExecutionException {
+		
+		JobDataMap dataMap = context.getJobDetail().getJobDataMap();
+		
+		System.out.println("Task "+dataMap.get("SCHEMA")+"."+dataMap.get("TASK_ID")+" start at "+ UtilApp.dateToString(new Date(), UtilApp.completeFormatDate));
+		
+		NotificationHelper notificationHelper = new NotificationHelper();
+		List<SMSChannelDTO> channelsDTO = null;
+		boolean allDone = false;
+		boolean readSMSChannelStatus = false;
+		int channel = 0;
+		
+		try {
+			notificationHelper.initSMSVariables();
+		} catch (Exception e2) {
+			e2.printStackTrace();
+			throw new JobExecutionException("Error at initialize variables - NotificationHelper. "+e2.getMessage());
+		}
+		
+		try {
+			channelsDTO = notificationHelper.getSMSChannelStatusList(notificationHelper.getAvailableSMSChannels());
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			throw new JobExecutionException("Error get SMS Channel Status List. "+e1.getMessage());
+		}
+
+		XPersistence.setDefaultSchema("public");
+		List<Organization> organizations = XPersistence.getManager()
+				.createQuery("SELECT o FROM Organization o ORDER BY name", Organization.class).getResultList();  
+		XPersistence.commit();
+		
+		for (Organization org : organizations)
+		{
+			channel = 0;
+			XPersistence.setDefaultSchema(org.getId());
+			List<Notification> notifications = XPersistence.getManager()
+					.createQuery("SELECT o FROM Notification o "
+							+ "WHERE o.notificationStatus.notificationStatusId = :requestStatusId "
+							+ "AND o.notificationType.notificationTypeId = :notificationTypeId "
+							+ "ORDER BY o.priority, o.registrationDate ", Notification.class)
+					.setParameter("requestStatusId", NotificationHelper.REQUEST_STATUS_ID)
+					.setParameter("notificationTypeId", NotificationHelper.SMS_TYPE_ID)
+					.setMaxResults(notificationHelper.getAvailableSMSChannels().length)
+					.getResultList();
+			
+			if(notifications!=null && notifications.size()>0)
+				System.out.println("Sending "+notifications.size()+" sms notifications for "+org.getId());
+			
+			for (Notification n : notifications)
+			{
+				n.setChannel(notificationHelper.getAvailableSMSChannels()[channel]);
+				channel++;
+				notificationHelper.sendSMS(n);
+				readSMSChannelStatus = true;
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if (readSMSChannelStatus)
+			{
+				while(!allDone)
+				{
+					try {
+						channelsDTO = notificationHelper.getSMSChannelStatusList(notificationHelper.getAvailableSMSChannels());
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						throw new JobExecutionException("Error get SMS Channel Status List. "+e1.getMessage());
+					}
+					allDone = true;
+					
+					for (SMSChannelDTO channelDTO : channelsDTO)
+					{
+						if (!channelDTO.getStatus().equals("DONE"))
+						{
+							allDone = false;
+							break;
+						}
+					}
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				System.out.println("All "+org.getId()+" notifications were sent...!");
+				for (Notification notification : notifications)
+				{
+					if (notification.getNotificationStatus().getNotificationStatusId().equals(NotificationHelper.PROCESSING_STATUS_ID))
+					{
+						for (SMSChannelDTO channelDTO : channelsDTO)
+						{
+							if (notification.getChannel().equals(channelDTO.getChannel()))
+							{
+								if (channelDTO.getError()!=null && channelDTO.getError().length()>0)
+								{
+									notification.setResponse(notification.getResponse()+"; ERROR:"+channelDTO.getError());
+									notification.setNotificationStatus(XPersistence.getManager().find(NotificationStatus.class, NotificationHelper.ERROR_STATUS_ID));
+								}
+								else
+								{
+									notification.setResponse(notification.getResponse()+"; DONE");
+									notification.setNotificationStatus(XPersistence.getManager().find(NotificationStatus.class, NotificationHelper.SENT_STATUS_ID));
+								}
+								XPersistence.getManager().merge(notification);
+								System.out.println("Finish notification No. "+notification.getNotificationId()+" for "+org.getId());
+								break;
+							}
+						}
+					}
+				}
+			}
+			
+			XPersistence.commit();
+		}
+	}	
+	
+}

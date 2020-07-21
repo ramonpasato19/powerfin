@@ -1,0 +1,87 @@
+package com.powerfin.model;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
+
+import org.openxava.jpa.XPersistence;
+
+import com.powerfin.actions.payroll.PayRollConsolidatedHelper;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.ParameterHelper;
+import com.powerfin.helper.PayRollHelper;
+
+/**
+ * @author Luis Ramon 
+ * Class to get method for Vacation
+ */
+public class Vacation {
+	public  BigDecimal execute(PayRoll payRoll, Integer fiscalYearId, Integer fiscalMonthId, BigDecimal nominalSalary, String payRollItemId) throws Exception {
+		BigDecimal totalContributed = BigDecimal.ZERO;
+		 for (PayRollDetail payRollDetail : PayRollHelper.getListPayRollDetail(payRoll.getPayRollId())) {
+	    	 if (payRollDetail.getPayrollItem().getPayrollItemId().compareTo(PayRollHelper.TOTAL_CONTRIBUTIONABLE)== 0) {
+	    		 totalContributed = totalContributed.add(payRollDetail.getAmount());
+	    	 }
+	     } 
+		return totalContributed.divide(new BigDecimal((getDaysCalculo(payRoll))), 8, RoundingMode.HALF_UP);
+	}	
+	//23-22-21-...
+	//si el numero de años es mayor a 5 por cada año adicional a los 24 les resrto el numoer de años..,
+	
+	///24-15==>10 el # de años adicionales..
+
+	
+	public int getDaysCalculo(PayRoll payRoll) {
+		int yearsWorked;
+		
+		EmployeeContract account = (EmployeeContract) XPersistence.getManager().createQuery("SELECT a FROM EmployeeContract a "
+				+ "WHERE a.person.personId=:PPERSONID "
+				+ "AND a.accountStatus.accountStatusId= :PACCOUNTSTATUS ")  //
+		.setParameter("PPERSONID", payRoll.getEmployeeContractDetail().getEmployeeContract().getPerson().getPersonId())
+		.setParameter("PACCOUNTSTATUS", AccountStatusHelper.ACTIVE_ACCOUNT_STATUS_ID)	
+		.getSingleResult();
+
+		System.out.println("##############################################################    "+account.getFromDateContract());
+		
+		Date dateCurrect = new Date();
+    	Calendar calendarCurrent = Calendar.getInstance();
+		calendarCurrent.setTime(dateCurrect);
+        int yearDateCurrent = calendarCurrent.get(Calendar.YEAR);
+		System.out.println("######################################  fecha actual ########################    "+yearDateCurrent);
+		
+		
+		Date dateEmployeeContract=(Date) account.getFromDateContract();
+		Calendar calendarEmployeeContract = Calendar.getInstance();
+		calendarEmployeeContract.setTime(dateEmployeeContract);
+        int yearEmployeeContract = calendarEmployeeContract.get(Calendar.YEAR);
+		System.out.println("#########################  employeecontract   #########################   "+yearEmployeeContract);
+
+		yearsWorked= yearDateCurrent-yearEmployeeContract;
+		System.out.println("#########################  Resta de Años   #########################   "+yearsWorked);
+//		
+		
+		if(yearsWorked<=5) {
+			return ParameterHelper.VARIABLE_FIVE_YEARS;
+		}
+		int adiotionalYears =  yearsWorked-5;
+		if(adiotionalYears<=0) {
+			return ParameterHelper.VARIABLE_FIVE_YEARS;
+		}
+		if(adiotionalYears>=10) {
+			return ParameterHelper.VARIABLE_FIVE_YEARS-10;
+		}
+		else {
+			return ParameterHelper.VARIABLE_FIVE_YEARS-adiotionalYears;
+		}
+ 
+		
+	}
+	
+	
+	
+
+}

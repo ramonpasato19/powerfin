@@ -1,0 +1,73 @@
+package com.powerfin.model;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
+
+import org.openxava.jpa.XPersistence;
+
+import com.powerfin.actions.payroll.PayRollConsolidatedHelper;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.ParameterHelper;
+import com.powerfin.helper.PayRollHelper;
+
+/**
+ * @author Luis Ramon 
+ * Class to get method for Vacation
+ */
+public class Vacation {
+	public  BigDecimal execute(PayRoll payRoll, Integer fiscalYearId, Integer fiscalMonthId, BigDecimal nominalSalary, String payRollItemId) throws Exception {
+		BigDecimal totalContributed = BigDecimal.ZERO;
+		 for (PayRollDetail payRollDetail : PayRollHelper.getListPayRollDetail(payRoll.getPayRollId())) {
+	    	 if (payRollDetail.getPayrollItem().getPayrollItemId().compareTo(PayRollHelper.TOTAL_CONTRIBUTIONABLE)== 0) {
+	    		 totalContributed = totalContributed.add(payRollDetail.getAmount());
+	    	 }
+	     } 
+		return totalContributed.divide(((getDaysCalculo(payRoll))), 8, RoundingMode.HALF_UP);
+	}	
+	
+	public BigDecimal getDaysCalculo(PayRoll payRoll) throws Exception {
+		int yearsWorked;
+		BigDecimal variableFiveYears = new BigDecimal(ParameterHelper.getValue("VARIABLE_FIVE_YEARS_PROVISION_VACATION"));
+		BigDecimal variableLimit = new BigDecimal(ParameterHelper.getValue("VARIABLE_LIMIT_PROVISION_VACATION"));
+		
+		EmployeeContract account = (EmployeeContract) XPersistence.getManager().createQuery("SELECT a FROM EmployeeContract a "
+				+ "WHERE a.person.personId=:PPERSONID "
+				+ "AND a.accountStatus.accountStatusId= :PACCOUNTSTATUS ")
+		.setParameter("PPERSONID", payRoll.getEmployeeContractDetail().getEmployeeContract().getPerson().getPersonId())
+		.setParameter("PACCOUNTSTATUS", AccountStatusHelper.ACTIVE_ACCOUNT_STATUS_ID)	
+		.getSingleResult();
+		
+		Date dateCurrect = new Date();
+    	Calendar calendarCurrent = Calendar.getInstance();
+		calendarCurrent.setTime(dateCurrect);
+        int yearDateCurrent = calendarCurrent.get(Calendar.YEAR);
+		
+		Date dateEmployeeContract=(Date) account.getFromDateContract();
+		Calendar calendarEmployeeContract = Calendar.getInstance();
+		calendarEmployeeContract.setTime(dateEmployeeContract);
+        int yearEmployeeContract = calendarEmployeeContract.get(Calendar.YEAR);
+		yearsWorked= yearDateCurrent-yearEmployeeContract;
+		
+		int adiotionalYears =  yearsWorked-5;
+		if(adiotionalYears<=0) {
+			return variableFiveYears;
+		}
+		if(adiotionalYears>=10) {
+			return variableFiveYears.subtract(new BigDecimal(variableLimit.intValue()));
+		}
+		else {
+			return variableFiveYears.subtract(new BigDecimal(adiotionalYears));
+		}
+ 
+		
+	}
+	
+	
+	
+
+}

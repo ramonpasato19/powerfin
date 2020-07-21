@@ -1,0 +1,8 @@
+package com.powerfin.actions.inventory;
+
+public class Snippet {
+	public static void main(String[] args) {
+		PrintInternalControlTransferItem
+	}
+}
+

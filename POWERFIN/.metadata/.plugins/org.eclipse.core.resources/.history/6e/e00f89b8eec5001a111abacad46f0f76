@@ -1,0 +1,40 @@
+package com.powerfin.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.openxava.annotations.Hidden;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.View;
+import org.openxava.annotations.Views;
+
+import com.powerfin.model.superclass.CompleteAuditEntity;
+
+
+/**
+ * The PayrollVacationType class for Vacation
+ * @author Luis Ramon
+ */
+@Entity
+@Table(name = "payroll_vacation_type")
+@View(members = "")
+public class PayrollVacationType extends CompleteAuditEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	@Id
+	@Column(name = "payroll_vacation_type_id", unique = true, nullable = false, length = 3)
+	private String payrollVacationTypeId; 
+	
+	@Column(name = "name", unique = true, nullable = false, length = 30)
+	@Required
+	private String name;
+
+
+}

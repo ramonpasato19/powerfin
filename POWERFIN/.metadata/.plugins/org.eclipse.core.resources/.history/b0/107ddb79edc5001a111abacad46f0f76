@@ -1,0 +1,5 @@
+package com.powerfin.model;
+
+public class PayrollVacationType {
+
+}

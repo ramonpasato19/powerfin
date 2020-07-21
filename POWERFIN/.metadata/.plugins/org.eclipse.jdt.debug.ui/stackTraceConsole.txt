@@ -1,0 +1,3 @@
+				XPersistence.getManager().merge(employeeContractDetailOld);				
+				XPersistence.commit();
+				super.execute();

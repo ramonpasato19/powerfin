@@ -1,0 +1,11 @@
+
+hsquid:S1710"5Remove the 'Views' wrapper from this annotation group(ĞáÅ®ûÿÿÿÿH’¯RMINORZ
+CODE_SMELL
+bsquid:S1710@"4Remove the 'Tabs' wrapper from this annotation group(Õ«„H“¯RMINORZ
+CODE_SMELL
+psquid:S1710j"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH”¯RMINORZ
+CODE_SMELL
+qsquid:S1710"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH•¯RMINORZ
+CODE_SMELL
+³squid:S1186ª"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(á÷šH–¯RCRITICALZ
+CODE_SMELL

@@ -1,0 +1,202 @@
+package com.powerfin.actions.payroll;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import org.openxava.actions.SaveAction;
+import org.openxava.jpa.XPersistence;
+import org.openxava.model.MapFacade;
+import org.openxava.util.Messages;
+import org.openxava.validators.ValidationException;
+
+import com.powerfin.helper.AccountHelper;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.EmployeeContractDetailHelper;
+import com.powerfin.helper.ProductHelper;
+import com.powerfin.helper.RequirementTypeHelper;
+import com.powerfin.model.Account;
+import com.powerfin.model.AccountPayable;
+import com.powerfin.model.Branch;
+import com.powerfin.model.EmployeeContract;
+import com.powerfin.model.EmployeeContractDetail;
+import com.powerfin.model.EmployeeContractRequirement;
+import com.powerfin.model.Person;
+import com.powerfin.model.Position;
+import com.powerfin.model.Requirement;
+import com.powerfin.model.Schedule;
+
+/**
+ * The Class save (head - detail) and create(account, AccoutPayble) to employee contract.
+ * @author Luis Ramon
+ */
+
+public class EmployeeContractSaveAction extends SaveAction {
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void execute() throws Exception {
+		validate();
+		try {
+			String employeeContractId = (String) getView().getValue("employeeContractId");
+			Map<String, Integer> personEmployeeMap = (Map<String, Integer>) getView().getRoot().getValue("person");
+			Integer personId = personEmployeeMap.get("personId");
+			Map<String, Integer> branch = (Map<String, Integer>) getView().getRoot().getValue("branch");
+			Integer branchId = branch.get("branchId");
+			if (employeeContractId == null || employeeContractId.isEmpty()) {    
+
+				// create account for employee contract
+				Account account = getAccountEmployee(personId, ProductHelper.EMPLOYEE_PRODUCT, null); 				
+				if (account == null) {
+					account=AccountHelper.createAccount(ProductHelper.EMPLOYEE_PRODUCT, personId, 
+							AccountHelper.DEFAULT_ACCOUNT_ACTIVE_STATUS, null, null, null, branchId);
+					// create accountPayable for employee contract
+					AccountPayable accountPayable =  new AccountPayable();
+					accountPayable.setAccountId(account.getAccountId()); 
+					accountPayable.setProduct(account.getProduct());
+					accountPayable.setPerson(account.getPerson());
+					XPersistence.getManager().persist(accountPayable);					
+					XPersistence.commit();
+					addMessage("account_created", account.getClass().getName());					
+				}
+				getView().setValue("employeeContractId", account.getAccountId());
+				super.execute();
+				
+			
+				//create new employee contract
+				if (getErrors().isEmpty()) {
+					Map keyValues = getView().getKeyValues();
+					EmployeeContract employeeContract = (EmployeeContract) MapFacade.findEntity(getView().getModelName(), keyValues);
+					System.out.println("employeeContract.getEmployeeContractId()="+employeeContract.getEmployeeContractId());
+					EmployeeContractDetail employeecontractdetail = fillEmployeeContractDetail(employeeContract);
+					XPersistence.getManager().persist(employeecontractdetail);
+					XPersistence.commit();
+					System.out.println("NO SE PUDO GUARDAR EL DETALLE");
+					 //code for get requirements for employee in status request to fill enployeeContractRequirements
+					List<Requirement> requirementList = XPersistence.getManager().createQuery("select d from Requirement d "
+							+ "where d.requirementType.requirementTypeId=:PREQUERIMENT_TYPE_ID")
+							.setParameter("PREQUERIMENT_TYPE_ID", RequirementTypeHelper.REQUIREMENT_EMPLOYEE)
+							.getResultList();
+					for(Requirement requirement :requirementList) {
+						EmployeeContractRequirement employeeContractRequirement=new EmployeeContractRequirement();
+						employeeContractRequirement.setEmployeeContract(employeeContract);
+						employeeContractRequirement.setAccountStatus(AccountStatusHelper.getAccountStatus(AccountStatusHelper.REQUEST_ACCOUNT_STATUS_ID));
+						employeeContractRequirement.setRequirement(requirement);
+						XPersistence.getManager().persist(employeeContractRequirement);					
+						XPersistence.commit();
+					}
+				}
+
+			} else if (employeeContractId != null) { //Edit Employee Contract
+
+				// Modified Account
+				Account account = XPersistence.getManager().find(Account.class, employeeContractId);
+				if (!account.getBranch().getBranchId().equals(branchId)) {
+					account.setBranch(XPersistence.getManager().find(Branch.class, branchId));
+					account = AccountHelper.updateAccount(account);
+					addMessage("account_modified", account.getClass().getName());					
+				}				
+				EmployeeContractDetail employeeContractDetailOld = EmployeeContractDetailHelper.getCurrentActiveEmployeeContractDetailByContractId(employeeContractId);
+				
+				//Create new detail with previous values and change value in previussalary and statusDetail 
+				Map keyValuesPrevious = getView().getKeyValues();
+				EmployeeContract employeeContractCurrent = (EmployeeContract) MapFacade.findEntity(getView().getModelName(), keyValuesPrevious);
+				EmployeeContractDetail employeeContractDetailNew = fillEmployeeContractDetail(employeeContractCurrent);
+				employeeContractDetailNew.setPreviousSalary(employeeContractDetailOld.getSalary());
+				XPersistence.getManager().persist(employeeContractDetailNew);
+				System.out.println("NO SE PUDO GUARDAR EL DETALLE");
+				// Update previous detail and change modified statusDetail and endDate
+				
+				employeeContractDetailOld.setAccountStatus(AccountStatusHelper.getAccountStatus(AccountStatusHelper.INACTIVE_ACCOUNT_STATUS_ID));
+				employeeContractDetailOld.setToDate(new Date());				
+				XPersistence.getManager().merge(employeeContractDetailOld);				
+				XPersistence.commit();
+				super.execute();
+			}
+			getView().refresh();
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw e;
+		}
+
+	}
+	/**
+	 * Method for get properties detail of EmployeeContractDetail 
+	 * @param employeeContractDetail
+	 * @param employeeContract
+	 * @param validityDetail
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private EmployeeContractDetail fillEmployeeContractDetail(EmployeeContract employeeContract) { 
+		
+		Map<String, Integer> personBoss = (Map<String, Integer>) getView().getRoot().getValue("personBossId");
+		Map<String, Integer> personBackup = (Map<String, Integer>) getView().getRoot().getValue("personBackupId");
+		Map<String, Integer> position = (Map<String, Integer>) getView().getRoot().getValue("position");
+		Map<String, Integer> schedule = (Map<String, Integer>) getView().getRoot().getValue("schedule");
+		BigDecimal salary = (BigDecimal)getView().getValue("salary"); 
+		BigDecimal previousSalary = (BigDecimal) getView().getValue("previousSalary");
+		Boolean accumulatesThirteenth = (Boolean) getView().getValue("accumulatesThirteenth");
+		Boolean accumulatesFourteenth = (Boolean) getView().getValue("accumulatesFourteenth");
+		Boolean reserveFunds = (Boolean) getView().getValue("reserveFunds");
+		Boolean disability = (Boolean) getView().getValue("disability");
+		Boolean extraHour = (Boolean) getView().getValue("extraHour");
+		Boolean paymentBiweekly = (Boolean) getView().getValue("paymentBiweekly");
+		EmployeeContractDetail employeeContractDetail = new EmployeeContractDetail();
+		if (personBoss!=null && personBoss.get("personId")!=null) {
+			employeeContractDetail.setPersonBossId(XPersistence.getManager().find(Person.class, (Integer) personBoss.get("personId")));
+		}
+		if (personBackup!=null && personBackup.get("personId")!=null) {
+			employeeContractDetail.setPersonBackupId(XPersistence.getManager().find(Person.class, (Integer) personBackup.get("personId")));
+		}
+		employeeContractDetail.setPosition(XPersistence.getManager().find(Position.class, position.get("positionId")));
+		employeeContractDetail.setSchedule(XPersistence.getManager().find(Schedule.class, schedule.get("scheduleId")));  
+		employeeContractDetail.setSalary(salary);
+		employeeContractDetail.setPreviousSalary(previousSalary);
+		employeeContractDetail.setFromDate(new Date());
+		employeeContractDetail.setAccumulatesThirteenth(accumulatesThirteenth);
+		employeeContractDetail.setAccumulatesFourteenth(accumulatesFourteenth);
+		employeeContractDetail.setReserveFunds(reserveFunds);
+		employeeContractDetail.setPaymentBiweekly(paymentBiweekly);
+		employeeContractDetail.setDisability(disability);
+		employeeContractDetail.setExtraHour(extraHour);
+		employeeContractDetail.setAccountStatus(AccountStatusHelper.getAccountStatus(AccountStatusHelper.ACTIVE_ACCOUNT_STATUS_ID));
+		employeeContractDetail.setEmployeeContract(employeeContract);
+		return employeeContractDetail;
+	}
+
+	//Method validate fields of view except employeeContractId
+	@SuppressWarnings("rawtypes")
+	private void validate() throws Exception {
+		Map map = getValuesToSave();
+		map.remove("employeeContractId");
+		Messages errors = MapFacade.validate(getModelName(), map);
+		if (errors.contains()) {
+			throw new ValidationException(errors);			
+		}
+	}
+	/**
+	 * Method that verify if account exist in this case. to create only employecontract
+	 * @param personId
+	 * @param productId
+	 * @param code
+	 * @return
+	 */
+	public Account getAccountEmployee(Integer personId, String productId, String code) 
+	{
+		try {
+			Account account = (Account) XPersistence.getManager().createQuery("SELECT a FROM Account a "
+					+ "WHERE a.person.personId=:PPERSONID "
+					+ "AND a.product.productId=:PPRODUCTID "
+					+ "AND a.accountStatus.accountStatusId= :PACCOUNTSTATUS "
+					+ "AND a.code is null")
+			.setParameter("PPERSONID", personId)
+			.setParameter("PPRODUCTID", productId)
+			.setParameter("PACCOUNTSTATUS", AccountStatusHelper.ACTIVE_ACCOUNT_STATUS_ID)			
+			.getSingleResult();
+			return account;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+}

@@ -1,0 +1,348 @@
+package com.powerfin.task;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
+import org.openxava.jpa.XPersistence;
+import org.openxava.util.Users;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+
+import com.powerfin.helper.AccountInvoiceHelper;
+import com.powerfin.helper.NotificationHelper;
+import com.powerfin.helper.ParameterHelper;
+import com.powerfin.helper.PersonHelper;
+import com.powerfin.helper.TransactionHelper;
+import com.powerfin.model.Account;
+import com.powerfin.model.AccountInvoice;
+import com.powerfin.model.AccountInvoicePayment;
+import com.powerfin.model.Person;
+import com.powerfin.model.Transaction;
+import com.powerfin.model.TransactionAccount;
+import com.powerfin.model.types.Types;
+import com.powerfin.util.UtilApp;
+
+@DisallowConcurrentExecution
+public class AuthorizeBackgroundTransaction implements Job {
+
+	@Override
+	public void execute(JobExecutionContext context) throws JobExecutionException {
+		
+		JobDataMap dataMap = context.getJobDetail().getJobDataMap();
+		
+		String schema = (String) dataMap.get("SCHEMA");
+		
+		System.out.println("Task "+dataMap.get("SCHEMA")+"."+dataMap.get("TASK_ID")+" start at "+ UtilApp.dateToString(new Date(), UtilApp.completeFormatDate));
+		
+		XPersistence.setDefaultSchema(schema);
+		Users.setCurrent("task");
+		Integer defaultBackgroundAuthorizationAttempts = 1;
+		
+		try {
+			defaultBackgroundAuthorizationAttempts = Integer.parseInt(ParameterHelper.getValue("BACKGROUND_AUTHORIZATION_ATTEMPTS"));
+		} catch (NumberFormatException e1) {
+			e1.printStackTrace();
+			defaultBackgroundAuthorizationAttempts = 1;
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			defaultBackgroundAuthorizationAttempts = 1;
+		}
+		
+		List<Transaction> transactions 	= XPersistence.getManager()
+				.createQuery("SELECT t FROM Transaction t "
+						+ "WHERE t.transactionStatus.transactionStatusId = :transactionStatusId "
+						+ "AND coalesce(t.backgroundAuthorization,0) = :backgroundAuthorization "
+						+ "AND coalesce(t.backgroundAuthorizationAttempts,0) <= :attempts "
+						+ "ORDER BY t.voucher", Transaction.class)
+				.setParameter("transactionStatusId", TransactionHelper.TRANSACTION_REQUEST_STATUS_ID)
+				.setParameter("backgroundAuthorization", Types.YesNoIntegerType.YES)
+				.setParameter("attempts", defaultBackgroundAuthorizationAttempts)
+				.setMaxResults(1)
+				.getResultList();
+		
+		for (Transaction transaction : transactions)
+		{
+			try
+			{
+				updateAttempsAndErrorMessage(schema, transaction, null, false);
+				
+				if (transaction.getTransactionModule().getTransactionModuleId().equals("INVOICE_SALE"))// SALE INVOICE
+				{
+					processPostSaleInvoice(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("INVOICESALEPAYMENT"))// SALE INVOICE PAYMENT
+				{
+					processSaleInvoicePayment(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("DEPOSITPAYABLE"))// EWALLET DEPOSIT
+				{
+					processEwalletDeposit(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("WITHDRAWALPAYABLE"))// EWALLET Withdrawal
+				{
+					processEwalletWithdrawal(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("TRANSFERPAYABLE"))// EWALLET TRANSFER
+				{
+					processEwalletTransfer(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("CONVERSIONITEM"))// CONVERSION ITEM
+				{
+					processConversionItem(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("TRANSFERITEM"))// TRANSFER ITEM
+				{
+					processTransferItem(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("TRANSFERITEMRECEPTION"))// TRANSFER ITEM reception
+				{
+					processTransferItemReception(transaction);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("CASHTRANSFERSEND"))// TRANSFER BOX
+				{
+					TransactionHelper.authorizeTransacction(transaction, null);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("CASHTRANSFERRECEPTION"))// TRANSFER BOX
+				{
+					TransactionHelper.authorizeTransacction(transaction, null);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("CASHEXIT"))// TRANSFER BOX
+				{
+					TransactionHelper.authorizeTransacction(transaction, null);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("CASHINCOME"))// TRANSFER BOX
+				{
+					TransactionHelper.authorizeTransacction(transaction, null);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("CASHEXITTHIRDPARTIES"))// TRANSFER BOX
+				{
+					TransactionHelper.authorizeTransacction(transaction, null);
+				}
+				else if (transaction.getTransactionModule().getTransactionModuleId().equals("CASHINCOMETHIRDPARTIES"))// TRANSFER BOX
+				{
+					TransactionHelper.authorizeTransacction(transaction, null);
+				}
+				else
+				{
+					System.out.println("Transaction "+transaction.getVoucher()+" does not have method to process");
+				}
+				
+			}
+			catch (Exception e)
+			{
+				System.out.println(">>>>>>Errors in process transaction: "+transaction.getVoucher()+" by scheduler task");
+				e.printStackTrace();
+				XPersistence.rollback();
+				
+				updateAttempsAndErrorMessage(schema, transaction, e.getLocalizedMessage().toString(), true);
+				
+			}
+			break;
+		}
+		XPersistence.commit();
+		Users.setCurrent("");
+	}	
+	
+	private void updateAttempsAndErrorMessage(String schema, Transaction transaction, String error, boolean force) {
+		if (force)
+		{
+			XPersistence.setDefaultSchema(schema);
+			transaction = XPersistence.getManager().find(Transaction.class, transaction.getTransactionId());
+		}
+		Integer attemps = transaction.getBackgroundAuthorizationAttempts();
+		if (attemps == null)
+			transaction.setBackgroundAuthorizationAttempts(1);
+		else
+			transaction.setBackgroundAuthorizationAttempts(attemps+1);
+		
+		transaction.setErrorMessage(error);
+		XPersistence.getManager().merge(transaction);
+	}
+
+	private void processPostSaleInvoice (Transaction transaction) throws Exception
+	{
+		List<TransactionAccount> transactionAccounts = AccountInvoiceHelper.getTransactionAccountsForInvoiceSale(transaction, 1);
+		if(TransactionHelper.authorizeTransacction(transaction, transactionAccounts))
+				AccountInvoiceHelper.postInvoiceSaleSaveAction(transaction);
+	}
+	
+	private void processEwalletDeposit (Transaction transaction) throws Exception
+	{
+		if (TransactionHelper.authorizeTransacction(transaction, null))
+		{
+			Person p = transaction.getCreditAccount().getPerson();
+			String deliveredTo = p.getEmail();
+			String posName = transaction.getOriginationBranch()!=null?transaction.getOriginationBranch().getName():"No Definida";
+			String message = 
+					"Estimado/a "+
+					"<br> "+
+					p.getName()+
+					"<br> "+
+					"<br> "+
+					"Le informamos que registramos un DEPOSITO de dinero a su Ewallet No. "+transaction.getCreditAccount().getAccountId()+" por un valor de $"+transaction.getValue().abs().toString()+", en el punto de venta "+posName+". "+
+					"<br> "+
+					"<br> "+
+					"Un cordial saludo. "+
+					"<br> "+
+					"<b>El Equipo de Yalobox SA</b>";
+
+			NotificationHelper nh = new NotificationHelper();
+			nh.createEmailNotification("DEPOSITO - EWALLET", message, deliveredTo);
+			
+			message = 
+					"Estimado/a "+
+					"\\r\\n"+
+					p.getName()+
+					"\\r\\n"+
+					"\\r\\n"+
+					"Le informamos que registramos un DEPOSITO de dinero a su Ewallet No. "+transaction.getCreditAccount().getAccountId()+" por un valor de $"+transaction.getValue().abs().toString()+", en el punto de venta "+posName+". "+
+					"\\r\\n"+
+					"\\r\\n"+
+					"Un cordial saludo. "+
+					"\\r\\n"+
+					"*El Equipo de Yalobox SA*";
+			nh.createWANotification(message, PersonHelper.getDefaultCellphoneNumber(p));
+		}
+	}
+	
+	private void processEwalletTransfer (Transaction transaction) throws Exception
+	{
+		if(TransactionHelper.authorizeTransacction(transaction, null))
+		{
+			NotificationHelper nh = new NotificationHelper();
+			nh.creatTransferEwalletNotification(
+					transaction.getDebitAccount().getPerson(),
+					transaction.getDebitAccount(),
+					transaction.getCreditAccount().getPerson(),
+					transaction.getCreditAccount(),
+					transaction.getValue()
+					);
+		}
+	}
+	
+	private void processEwalletWithdrawal (Transaction transaction) throws Exception
+	{
+		if(TransactionHelper.authorizeTransacction(transaction, null))
+		{
+			Person p = transaction.getDebitAccount().getPerson();
+			String deliveredTo = null;
+			String posName = transaction.getOriginationBranch()!=null?transaction.getOriginationBranch().getName():"No Definida";
+			String message = 
+					"Estimado/a "+
+					"<br> "+
+					p.getName()+
+					"<br> "+
+					"<br> "+
+					"Le informamos que registramos una LIQUIDACION de dinero desde su Ewallet No. "+transaction.getDebitAccount().getAccountId()+" por un valor de $"+transaction.getValue().abs().toString()+", en el punto de venta "+posName+". "+
+					"<br> "+
+					"<br> "+
+					"Un cordial saludo. "+
+					"<br> "+
+					"<b>El Equipo de Yalobox SA</b>";
+			
+			deliveredTo = p.getEmail();
+			NotificationHelper nh = new NotificationHelper();
+			nh.createEmailNotification("LIQUIDACION - EWALLET",message, deliveredTo);
+			
+			message = 
+					"Estimado/a "+
+					"\\r\\n"+
+					p.getName()+
+					"\\r\\n"+
+					"\\r\\n"+
+					"Le informamos que registramos una LIQUIDACION de dinero desde su Ewallet No. "+transaction.getDebitAccount().getAccountId()+" por un valor de $"+transaction.getValue().abs().toString()+", en el punto de venta "+posName+". "+
+					"\\r\\n"+
+					"\\r\\n"+
+					"Un cordial saludo. "+
+					"\\r\\n"+
+					"*El Equipo de Yalobox SA*";
+			nh.createWANotification(message, PersonHelper.getDefaultCellphoneNumber(p));
+		}
+			
+	}
+	
+	private void processConversionItem (Transaction transaction) throws Exception
+	{
+		AccountInvoiceHelper.preConversionItemSaveAction(transaction);
+		if(TransactionHelper.authorizeTransacction(transaction, null))
+			AccountInvoiceHelper.postConversionItemSaveAction(transaction);
+	}
+	
+	private void processTransferItem (Transaction transaction) throws Exception
+	{
+		AccountInvoiceHelper.preTransferItemSaveAction(transaction);
+		if(TransactionHelper.authorizeTransacction(transaction, null))
+			AccountInvoiceHelper.postTransferItemSaveAction(transaction);
+	}
+	
+	private void processTransferItemReception (Transaction transaction) throws Exception
+	{
+		if(TransactionHelper.authorizeTransacction(transaction, null))
+			AccountInvoiceHelper.postTransferItemSaveAction(transaction);
+	}
+	
+	private void processSaleInvoicePayment (Transaction transaction) throws Exception
+	{
+		List<TransactionAccount> transactionAccounts = AccountInvoiceHelper.getTAForInvoiceSalePayment(transaction);
+		if(TransactionHelper.authorizeTransacction(transaction, transactionAccounts))
+		{
+			AccountInvoiceHelper.postInvoiceSalePaymentSaveAction(transaction);
+			
+			String posName = transaction.getCreditAccount().getBranch()!=null?transaction.getCreditAccount().getBranch().getName():"No Definida";
+			AccountInvoice invoice = XPersistence.getManager().find(AccountInvoice.class, transaction.getCreditAccount().getAccountId());
+			BigDecimal paymentValue = null;
+			
+			//Payments
+			if (invoice.getAccountInvoicePayments() != null && invoice.getAccountInvoicePayments().size()>0)
+			{
+				for (AccountInvoicePayment payment: invoice.getAccountInvoicePayments())
+				{
+					//TODO Esta quemado los metodos de pago. hay que ver una forma que sea parametrizado
+					if (payment.getInvoicePaymentMethod().getInvoicePaymentMethodId().equals("006")) //ewallet
+					{
+						paymentValue = payment.getValue();
+					}
+				}
+			}
+			if (paymentValue!=null && paymentValue.compareTo(BigDecimal.ZERO)>0)
+			{
+				Person p = transaction.getCreditAccount().getPerson();
+				Account a = PersonHelper.getEwalletAccount(p);
+				String message = 
+						"Estimado/a "+
+						"<br> "+
+						p.getName()+
+						"<br> "+
+						"<br> "+
+						"Le informamos que registramos un CONSUMO desde su Ewallet No. "+a.getAccountId()+" por un valor de $"+paymentValue.abs().toString()+", en el punto de venta "+posName+". "+
+						"<br> "+
+						"<br> "+
+						"Un cordial saludo. "+
+						"<br> "+
+						"<b>El Equipo de Yalobox SA</b>";
+
+				NotificationHelper nh = new NotificationHelper();
+				nh.createEmailNotification("CONSUMO - EWALLET",message, p.getEmail());
+				
+				message = 
+						"Estimado/a "+
+						"\\r\\n"+
+						p.getName()+
+						"\\r\\n"+
+						"\\r\\n"+
+						"Le informamos que registramos un CONSUMO desde su Ewallet No. "+a.getAccountId()+" por un valor de $"+paymentValue.abs().toString()+", en el punto de venta "+posName+". "+
+						"\\r\\n"+
+						"\\r\\n"+
+						"Un cordial saludo. "+
+						"\\r\\n"+
+						"*El Equipo de Yalobox SA*";
+				nh.createWANotification(message, PersonHelper.getDefaultCellphoneNumber(p));
+			}
+		}
+	}
+	
+}

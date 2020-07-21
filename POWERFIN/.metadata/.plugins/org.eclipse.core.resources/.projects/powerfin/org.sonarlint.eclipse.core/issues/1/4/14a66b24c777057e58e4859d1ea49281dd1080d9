@@ -1,0 +1,17 @@
+
+Zsquid:S1148Æ"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿH³µRMINORZVULNERABILITY
+f
+squid:S106I"9Replace this use of System.out or System.err by a logger.(çÖÄõH´µRMAJORZ
+CODE_SMELL
+k
+squid:S106E"9Replace this use of System.out or System.err by a logger.(Üş¿ûÿÿÿÿH®µRMAJORZ
+CODE_SMELL
+_squid:S1172¸"+Remove this unused method parameter "code".(ı¸÷óúÿÿÿÿH±µRMAJORZ
+CODE_SMELL
+f
+squid:S106j"9Replace this use of System.out or System.err by a logger.(çÖÄõH¯µRMAJORZ
+CODE_SMELL
+msquid:S1161%":Add the "@Override" annotation above this method signature(ÔßùìùÿÿÿÿH°µRMAJORZ
+CODE_SMELL
+squid:S1488»"_Immediately return this expression instead of assigning it to the temporary variable "account".(éÖÃÂH²µRMINORZ
+CODE_SMELL

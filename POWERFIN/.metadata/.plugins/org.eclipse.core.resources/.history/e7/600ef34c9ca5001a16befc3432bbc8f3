@@ -1,0 +1,95 @@
+package com.powerfin.helper;
+
+
+import javax.persistence.Query;
+
+import org.openxava.jpa.XPersistence;
+
+import com.powerfin.model.*;
+
+public class EmployeeContractDetailHelper {
+	
+	public static EmployeeContractDetail getCurrentActiveEmployeeContractDetailByContractId
+		(String  employeeContractId){
+		try {
+			String sql = "select distinct d from EmployeeContractDetail d "
+					+ "where d.accountStatus.accountStatusId =:PACCOUNT_STATUS and "
+					+ "d.employeeContract.employeeContractId=:PCONTRACT"; 
+			Query query = XPersistence.getManager().createQuery(sql);
+			query.setParameter("PCONTRACT", employeeContractId);
+			query.setParameter("PACCOUNT_STATUS",AccountHelper.DEFAULT_ACCOUNT_ACTIVE_STATUS);
+			return (EmployeeContractDetail) query.getSingleResult();			
+		} catch (Exception e) {	
+		}
+		return null;		
+	}
+	
+	public static EmployeeContractDetail getCurrentActiveEmployeeContractDetailByPerson(Integer personId) {
+		try {
+			EmployeeContractDetail employeePerson = (EmployeeContractDetail) XPersistence.getManager()
+					.createQuery("select d from EmployeeContractDetail d left join d.employeeContract c  where"
+							+ " c.person.personId = :PERSONID"
+							+ " and c.accountStatus.accountStatusId = :PACCOUNT_STATUS "
+							+ " and d.accountStatus.accountStatusId = :PACCOUNT_STATUS ")
+					.setParameter("PERSONID", personId)
+					.setParameter("PACCOUNT_STATUS", AccountHelper.DEFAULT_ACCOUNT_ACTIVE_STATUS)
+					.getSingleResult();
+			return employeePerson;
+		} catch (Exception e) {
+			System.out.println("NO SE PUDO RECUPERAR UN CONTRATO EMPLOYEE DETAIL ACTIVO ");
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	public static EmployeeContract getCurrentActiveEmployeeContractByPerson(Integer personId) throws Exception{
+		try {
+			EmployeeContract employeePerson = (EmployeeContract) XPersistence.getManager()
+					.createQuery("select e from EmployeeContract e where"
+							+ " e.person.personId = :PERSONID"
+							+ " and e.accountStatus.accountStatusId = :PACCOUNT_STATUS ")
+					.setParameter("PERSONID", personId)
+					.setParameter("PACCOUNT_STATUS",AccountHelper.DEFAULT_ACCOUNT_ACTIVE_STATUS)
+					.getSingleResult();
+			return employeePerson;
+		} catch (Exception e) {
+			System.out.println("NO SE PUDO RECUPERAR UN CONTRATO EMPLOYEE ACTIVO ");
+			e.printStackTrace();
+			
+			return null;
+		}
+	}
+	
+	public static EmployeeContractDetail getCurrentActiveEmployeeContractByPersonIdentification(String identification) {
+		try {
+			EmployeeContractDetail employeePerson = (EmployeeContractDetail) XPersistence.getManager()
+					.createQuery("select distinct d from EmployeeContractDetail d left join d.employeeContract c where"
+							+ " c.person.identification = :PIDENTIFICATION "
+							+ " and c.accountStatus.accountStatusId = :PACCOUNT_STATUS"
+							+ " and d.accountStatus.accountStatusId = :PACCOUNT_STATUS ")
+					.setParameter("PIDENTIFICATION", identification)
+					.setParameter("PACCOUNT_STATUS", AccountHelper.DEFAULT_ACCOUNT_ACTIVE_STATUS)
+					.getSingleResult();
+			return employeePerson;
+		} catch (Exception e) {
+			System.out.println("NO SE PUDO RECUPERAR UN CONTRATO EMPLOYEE DETAIL ACTIVO ");
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	
+	public static AccountItem getCurrentActiveEmployeeContractDetailByContractId1(String  employeeContractId){
+	try {
+		String sql = "select distinct d from AccountItem d "
+				+ "where d.accountStatus.accountStatusId =:PACCOUNT_STATUS and "
+				+ "d.employeeContract.employeeContractId=:PCONTRACT"; 
+		Query query = XPersistence.getManager().createQuery(sql);
+		query.setParameter("PCONTRACT", employeeContractId);
+		query.setParameter("PACCOUNT_STATUS",AccountHelper.DEFAULT_ACCOUNT_ACTIVE_STATUS);
+		return (AccountItem) query.getSingleResult();			
+	} catch (Exception e) {	
+	}
+	return null;		
+}
+}

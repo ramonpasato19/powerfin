@@ -1,0 +1,14 @@
+
+hsquid:S1118":Add a private constructor to hide the implicit public one.(Âşä¼H»¶RMAJORZ
+CODE_SMELL
+squid:ModifiersOrderCheck	"EReorder the modifiers to comply with the Java Language Specification.(Ù°ğH¼¶RMINORZ
+CODE_SMELL
+†squid:ModifiersOrderCheck
+"EReorder the modifiers to comply with the Java Language Specification.(ºµÚ¡øÿÿÿÿH½¶RMINORZ
+CODE_SMELL
+squid:ModifiersOrderCheck"EReorder the modifiers to comply with the Java Language Specification.(„¿H¾¶RMINORZ
+CODE_SMELL
+†squid:ModifiersOrderCheck"EReorder the modifiers to comply with the Java Language Specification.(™‡áêÿÿÿÿÿH¿¶RMINORZ
+CODE_SMELL
+squid:ModifiersOrderCheck"EReorder the modifiers to comply with the Java Language Specification.(€Ú¦¡HÀ¶RMINORZ
+CODE_SMELL

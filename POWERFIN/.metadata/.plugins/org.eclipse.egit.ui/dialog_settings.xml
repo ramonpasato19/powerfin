@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<list key="RepositorySelectionPage.UsedUris">
+		<item value="ssh://lramon@192.168.1.56/home/repositories/git/powerfin.git"/>
+		<item value="ssh://lramon@191.100.25.217:2022/home/repositories/git/powerfin.git"/>
+		<item value="ssh://dmogrovejo@191.100.25.217:2022/home/repositories/git/powerfin.git"/>
+	</list>
+	<section name="GitCreatePatchWizard">
+		<item value="/home/lramon/Escritorio" key="GitCreatePatchWizard.LocationPage.path"/>
+		<item value="3" key="GitCreatePatchWizard.OptionsPage.contextLines"/>
+		<item value="filesystem" key="GitCreatePatchWizard.LocationPage.location"/>
+		<item value="NONE" key="GitCreatePatchWizard.OptionsPage.format"/>
+	</section>
+</section>

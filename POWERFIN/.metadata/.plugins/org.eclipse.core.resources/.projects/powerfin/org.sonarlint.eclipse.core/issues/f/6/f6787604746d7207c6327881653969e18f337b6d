@@ -1,0 +1,14 @@
+
+Žsquid:S00120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(â‹¨îýÿÿÿÿHÜ¸RMINORZ
+CODE_SMELL
+ysquid:UselessImportCheck"?Remove this unused import 'org.jsoup.select.Evaluator.IsEmpty'.(ÖàéHÝ¸RMINORZ
+CODE_SMELL
+ysquid:UselessImportCheck
+">Remove this unused import 'com.powerfin.model.AccountInvoice'.(Òî–ŸHÞ¸RMINORZ
+CODE_SMELL
+|squid:UselessImportCheck"ARemove this unused import 'com.powerfin.model.AccountItemBranch'.(ì¼í’Hß¸RMINORZ
+CODE_SMELL
+ksquid:S1858+"="get" returns a string, there's no need to call "toString()".(÷€ƒ±Hà¸RMINORZ
+CODE_SMELL
+psquid:S18589"="get" returns a string, there's no need to call "toString()".(¼²±ïýÿÿÿÿHá¸RMINORZ
+CODE_SMELL

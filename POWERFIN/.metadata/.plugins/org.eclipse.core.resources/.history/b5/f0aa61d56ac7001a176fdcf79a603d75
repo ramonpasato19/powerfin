@@ -1,0 +1,99 @@
+package com.powerfin.actions.accountInvoice;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+
+import org.openxava.actions.SaveElementInCollectionAction;
+import org.openxava.jpa.XPersistence;
+import org.openxava.model.MapFacade;
+
+
+import com.powerfin.exception.OperativeException;
+import com.powerfin.model.Account;
+import com.powerfin.model.AccountInvoice;
+import com.powerfin.model.AccountInvoiceDetail;
+import com.powerfin.model.Category;
+import com.powerfin.model.Tax;
+import com.powerfin.model.types.Types.InOrOut;
+
+/**
+ * Clase para guardar y editar el detalle de la receta
+ * @author Adrian Morales
+ *
+ */
+public class CreateNewInvoiceDetailToRecipe extends SaveElementInCollectionAction {
+	
+	@SuppressWarnings("unchecked")
+	public void execute() throws Exception {
+		validate();
+		AccountInvoice accountInvoice = (AccountInvoice) MapFacade.findEntity(getView().getModelName(),
+				getView().getKeyValuesWithValue());
+			
+		BigDecimal quantity = (BigDecimal) getView().getSubview("details").getValue("quantity");
+		InOrOut debitOrCredit = (InOrOut) getView().getSubview("details").getValue("debitOrCredit");
+		Map<String, String> accountDetail = (Map<String, String>) getView().getSubview("details")
+				.getValue("accountDetail");
+		Map<String, String> categoryId = (Map<String, String>) getView().getSubview("details").getValue("categoryRecipe");
+		
+		AccountInvoiceDetail accountInvoiceDetail = new AccountInvoiceDetail();
+		
+		if (getView().getSubview("details").isKeyEditable()) {
+			accountInvoiceDetail.setAccountInvoice(accountInvoice);
+			loadValuesAccountInvoiceDetail(accountInvoiceDetail, debitOrCredit, quantity, accountDetail, categoryId);
+			XPersistence.getManager().persist(accountInvoiceDetail);
+			addMessage("recipe_detail_created");		
+		}  else {
+			accountInvoiceDetail = XPersistence.getManager().find(AccountInvoiceDetail.class, 
+					(String) getView().getSubview("details").getValue("accountInvoiceDetailId"));
+			loadValuesAccountInvoiceDetail(accountInvoiceDetail, debitOrCredit, quantity, accountDetail, categoryId);
+			XPersistence.getManager().merge(accountInvoiceDetail);
+			addMessage("recipe_detail_modified");
+		}
+		super.closeDialog();
+		XPersistence.commit();
+	}
+	
+	@SuppressWarnings("unused")
+	private AccountInvoiceDetail loadValuesAccountInvoiceDetail(AccountInvoiceDetail accountInvoiceDetail, InOrOut debitOrCredit, 
+			BigDecimal quantity,  Map<String, String> accountDetailId,Map<String, String> categoryId){
+		accountInvoiceDetail.setTax(XPersistence.getManager().find(Tax.class, "IVANOTDEF"));
+		accountInvoiceDetail.setQuantity(quantity);
+		accountInvoiceDetail.setUnitPrice(BigDecimal.ONE);
+		accountInvoiceDetail.setAccountDetail(XPersistence.getManager().find(Account.class, accountDetailId.get("accountId")));
+		accountInvoiceDetail.setCategoryRecipe(XPersistence.getManager().find(Category.class, categoryId.get("categoryId")));
+		accountInvoiceDetail.setDebitOrCredit(debitOrCredit);	
+		return accountInvoiceDetail;
+	}
+	@SuppressWarnings("unchecked")
+	public void validate(){
+		String accountId = (String) getView().getValue("accountId");
+		BigDecimal quantity = (BigDecimal) getView().getSubview("details").getValue("quantity");
+		Map<String, String> accountDetail = (Map<String, String>) getView().getSubview("details").getValue("accountDetail");
+		Map<String, String> categoryId = (Map<String, String>) getView().getSubview("details").getValue("categoryRecipe");
+		InOrOut debitOrCredit = (InOrOut) getView().getSubview("details").getValue("debitOrCredit");
+		
+		if (accountId == null || accountId.isEmpty()) {
+			throw new OperativeException("account_invoice_most_be_saved");
+		}
+		
+		if (accountDetail.get("accountId").isEmpty()||accountDetail.get("accountId")==null) {
+			throw new OperativeException("account_invoice_details_required");
+		}
+		
+		if (categoryId.get("categoryId").isEmpty()||categoryId.get("categoryId")==null) {
+			throw new OperativeException("location_is_required");
+		}
+		
+		if (quantity==null || quantity.compareTo(BigDecimal.ZERO)<=0) {
+			throw new OperativeException("detail_have_incorrect_quantity");
+		}
+		
+		if (debitOrCredit==null) {
+			throw new OperativeException("debit_or_credit_is_required");
+		}
+		
+		
+	}
+
+}

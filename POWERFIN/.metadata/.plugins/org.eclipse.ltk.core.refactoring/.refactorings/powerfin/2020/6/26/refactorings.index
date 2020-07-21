@@ -1,0 +1,13 @@
+1593006831975	Rename type 'EmployeePaymentRoleManager'
+1593007360916	Rename type 'PaymentRoleByPersonPrintAction'
+1593041162642	Delete element
+1593041377219	Delete element
+1593042021686	Delete element
+1593042050018	Rename type 'Test'
+1593097183557	Rename type 'IssueElectronicPayrolAction'
+1593098035235	Rename type 'sendIndividualPayrollByMail'
+1593098065800	Rename type 'IssueElectronicPayrolConsolidatedAction'
+1593098922587	Rename type 'PaymentRoleConsutConsolidatedAction'
+1593098977444	Move compilation unit
+1593099036367	Move compilation unit
+1593099204010	Rename type 'ConsultAndSendMailPayroll'

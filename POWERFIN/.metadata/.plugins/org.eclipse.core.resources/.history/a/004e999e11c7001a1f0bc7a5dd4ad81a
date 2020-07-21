@@ -1,0 +1,155 @@
+package com.powerfin.actions.payroll;
+
+import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.Query;
+
+import org.openxava.actions.SaveAction;
+import org.openxava.jpa.XPersistence;
+import org.openxava.model.MapFacade;
+import org.openxava.util.Messages;
+import org.openxava.validators.ValidationException;
+
+import com.powerfin.exception.OperativeException;
+import com.powerfin.model.Account;
+import com.powerfin.model.AccountInvoice;
+import com.powerfin.model.AccountInvoiceDetail;
+import com.powerfin.model.AccountStatus;
+import com.powerfin.model.EmployeeContract;
+import com.powerfin.model.EmployeeContractDetail;
+import com.powerfin.model.EmployeeContractRequirement;
+import com.powerfin.model.PayrollVacation;
+import com.powerfin.model.PayrollVacationType;
+import com.powerfin.model.Person;
+import com.powerfin.model.Position;
+import com.powerfin.model.Tax;
+
+
+/**
+ * The Class save (head - detail) and create(account, AccoutPayble) to employee contract.
+ * @author Luis Ramon
+ */
+
+public class PayrollVacationSaveAction extends SaveAction {
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void execute() throws Exception {
+		validate();
+		try {
+			String payrollVacationId = getView().getRoot().getValueString("payrollVacationId");
+			if(payrollVacationId!=null) {
+				
+			
+			
+			Map<String, String> payrollVacationType = (Map<String, String>) getView().getRoot().getValue("payrollVacationType");
+			String payrollVacationTypeId = payrollVacationType.get("payrollVacationTypeId");
+			
+//			String payrollVacationTypeName = getView().getSubview("payrollVacationType").getValueString("name");
+			Map<Integer, Integer> personMap = (Map<Integer, Integer>) getView().getSubview("employeeContract").getValue("person");
+			Person personId = XPersistence.getManager().find(Person.class, personMap.get("personId"));
+			
+			Date fromDate = (Date) getView().getRoot().getValue("fromDate");
+			Date toDate = (Date) getView().getRoot().getValue("toDate");
+//			int daysVacation = getView().getRoot().getValueInt("daysVacation");
+			BigDecimal monetaryValue = (BigDecimal)getView().getValue("monetaryValue"); 
+			String remark = getView().getRoot().getValueString("remark");
+//			String accountStatus = getView().getSubview("accountStatus").getValueString("name");
+			
+
+
+			Map<String, String> accountStatus = (Map<String, String>) getView().getRoot().getValue("accountStatus");
+			String accountStatusId = accountStatus.get("accountStatusId");
+			
+			
+			Calendar fromCurrent = Calendar.getInstance();
+			fromCurrent.setTime(fromDate);
+			int dayFromDate = fromCurrent.get(Calendar.DAY_OF_MONTH);
+			System.out.println(dayFromDate);
+			Calendar toCurrent = Calendar.getInstance();
+			toCurrent.setTime(toDate);
+			int dayToDate = toCurrent.get(Calendar.DAY_OF_MONTH);
+			System.out.println(dayToDate);
+			int daysVacation  = dayToDate - dayFromDate;
+			
+			System.out.println("id   "+ payrollVacationId);
+			System.out.println("payrollVacationTypeName   " +payrollVacationTypeId);
+			System.out.println("person; "+personId.getPersonId());
+			System.out.println("fecha;  +"+fromDate);
+			System.out.println("fecha;  +"+toDate);
+			System.out.println("dias   "+ daysVacation);
+			System.out.println("valor   "+monetaryValue);
+			System.out.println("descripcion   "+remark);
+			System.out.println("estado    " +accountStatusId);
+			
+			
+//			int dayDateCurrent = fromCurrent.get(Calendar.DAY_OF_MONTH);
+			
+			PayrollVacation payrollVacation=new PayrollVacation();
+			
+			payrollVacation.setPayrollVacationType(XPersistence.getManager().find(PayrollVacationType.class, payrollVacationTypeId));// XPersistence.getManager().find(Position.class, position.get("positionId"))
+			payrollVacation.setEmployeeContract(XPersistence.getManager().find(EmployeeContract.class, personId.getPersonId()));
+			payrollVacation.setFromDate(toDate);
+			payrollVacation.setToDate(toDate);
+			payrollVacation.setDaysVacation(daysVacation);
+			payrollVacation.setMonetaryValue(monetaryValue);
+			payrollVacation.setRemark(remark);
+			payrollVacation.setAccountStatus(XPersistence.getManager().find(AccountStatus.class, accountStatusId));
+			
+			XPersistence.getManager().merge(payrollVacation);				
+			XPersistence.commit();
+//			super.execute();
+//			
+//			super.execute();
+			
+			
+//			if (toDate == null) {			 
+//				throw new OperativeException("to_date_is_required");
+//			}
+			
+			
+//			Date dateCurrect = new Date();
+//			
+//			Calendar calendarCurrent = Calendar.getInstance();
+//			calendarCurrent.setTime(dateCurrect);
+//			int yearDateCurrent = calendarCurrent.get(Calendar.YEAR);
+//
+//			Date dateEmployeeContract = (Date) employeeContract.getFromDateContract();
+//			Calendar calendarEmployeeContract = Calendar.getInstance();
+//			calendarEmployeeContract.setTime(dateEmployeeContract);
+//			int yearEmployeeContract = calendarEmployeeContract.get(Calendar.YEAR);
+			
+//			yearsWorked = yearDateCurrent - yearEmployeeContract;
+			
+			
+			
+			}
+			
+			
+//			super.execute();
+			getView().refresh();
+		} catch (Exception e) {
+			XPersistence.rollback();
+			throw e;
+		}
+		
+		
+		
+	}
+
+	
+	//Method validate fields of view except employeeContractId
+	@SuppressWarnings("rawtypes")
+	private void validate() throws Exception {
+		Map map = getValuesToSave();
+		map.remove("payrollVacationId");
+		Messages errors = MapFacade.validate(getModelName(), map);
+		if (errors.contains()) {
+			throw new ValidationException(errors);			
+		}
+	}
+}

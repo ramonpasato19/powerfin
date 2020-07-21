@@ -1,0 +1,121 @@
+package com.powerfin.actions.accountInvoice;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.Query;
+
+import org.openxava.actions.IForwardAction;
+import org.openxava.actions.SaveElementInCollectionAction;
+import org.openxava.jpa.XPersistence;
+import org.openxava.model.MapFacade;
+import org.openxava.util.Users;
+import org.openxava.util.jxls.JxlsConstants;
+import org.openxava.util.jxls.JxlsSheet;
+import org.openxava.util.jxls.JxlsStyle;
+import org.openxava.util.jxls.JxlsWorkbook;
+import org.openxava.web.servlets.ReportXLSServlet;
+
+import com.powerfin.exception.OperativeException;
+import com.powerfin.helper.AccountHelper;
+import com.powerfin.helper.AccountItemHelper;
+import com.powerfin.helper.CompanyHelper;
+import com.powerfin.helper.ParameterHelper;
+import com.powerfin.helper.UserHelper;
+import com.powerfin.model.Account;
+import com.powerfin.model.AccountInvoice;
+import com.powerfin.model.AccountInvoiceDetail;
+import com.powerfin.model.AccountItem;
+import com.powerfin.model.AccountStatus;
+import com.powerfin.model.Branch;
+import com.powerfin.model.Person;
+import com.powerfin.model.Product;
+import com.powerfin.model.ProductProviderTemp;
+import com.powerfin.model.ProductProviderDetailTemp;
+import com.powerfin.model.Tax;
+import com.powerfin.model.UnitMeasure;
+import com.powerfin.model.Unity;
+import com.powerfin.model.types.Types.InOrOut;
+
+/**
+ * Class to generate purchase order
+ * @author David Mogrovejo
+ */
+public class SaveActionAccointInvoiceDetail extends SaveElementInCollectionAction {
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void execute() throws Exception {
+		if (!getView().getSubview("details").isKeyEditable()) {					
+			AccountInvoice accountInvoice = (AccountInvoice) MapFacade.findEntity(getView().getModelName(),getView().getKeyValuesWithValue());
+			BigDecimal unitPrice = (BigDecimal) getView().getSubview("details").getValue("unitPrice");
+			BigDecimal taxSpecialConsumption = (BigDecimal) getView().getSubview("details").getValue("taxSpecialConsumption");
+			BigDecimal taxRedeemable = (BigDecimal) getView().getSubview("details").getValue("taxRedeemable");
+			Date dueDate = (Date) getView().getSubview("details").getValue("dueDate");
+			Map<String, String> taxMap = (Map<String, String>) getView().getSubview("details").getValue("tax");
+			Map<String, String> accountDetail = (Map<String, String>) getView().getSubview("details").getValue("accountDetail");
+			//................add
+			Map<String, String> unitMeasureProvider = (Map<String, String>) getView().getSubview("details").getValue("unitMeasureProvider");//addd
+			System.out.println("............................"+unitMeasureProvider.toString());
+
+			
+			
+			//--------------------------------------------
+			
+			
+			List<AccountInvoiceDetail> details = null;
+			Account accountItem = XPersistence.getManager().find(Account.class, accountDetail.get("accountId"));
+			Query query = XPersistence.getManager().createQuery(
+					"select aid from  AccountInvoiceDetail aid left join fetch aid.accountDetail aitem "
+					+ " left join fetch aid.accountInvoice ai where ai.accountId = :PACCOUNT_INVOICE_ID "
+					+ " and aitem.accountId = :PACCOUNT_ITEM_ID");
+			query.setParameter("PACCOUNT_INVOICE_ID", accountInvoice.getAccountId());
+			query.setParameter("PACCOUNT_ITEM_ID", accountItem.getAccountId());
+			details = query.getResultList();
+
+			if (details != null && !details.isEmpty()) {
+				Tax tax = XPersistence.getManager().find(Tax.class, taxMap.get("taxId"));
+				// add...................
+//				AccountItem accountItemMeasure = XPersistence.getManager().find(AccountItem.class, unitMeasureProvider.get("unitMeasure"));//unitMeasure
+				UnitMeasure accountItemMeasure = XPersistence.getManager().find(UnitMeasure.class, unitMeasureProvider.get("unitMeasure"));//unitMeasure
+				//accountItemMeasure.setUnitMeasureProvider((UnitMeasure) unitMeasureProvider);
+				AccountItem ai = XPersistence.getManager().find(AccountItem.class, accountDetail.get("accountId"));	
+				
+				System.out.println("-------2222222222------"+accountItemMeasure.getName());
+				System.out.println("----------------3333333333--------"+ ai.getUnitMeasureProvider().toString() );
+				
+				AccountItem ai1 = XPersistence.getManager().find(AccountItem.class, accountDetail.get("accountId"));	
+				System.out.println("ai1"+ai1.getAccountId());
+				ai1.setUnitMeasureProvider(accountItemMeasure);
+				
+				XPersistence.getManager().merge(ai1);
+				XPersistence.commit();
+				
+				//-------------
+				for (AccountInvoiceDetail accountInvoiceDetail : details) {
+					//.............add
+				
+					 
+					
+					//................
+					accountInvoiceDetail.setUnitPrice(unitPrice);
+					accountInvoiceDetail.setTax(tax);
+					accountInvoiceDetail.setTaxSpecialConsumption(taxSpecialConsumption);
+					accountInvoiceDetail.setTaxRedeemable(taxRedeemable);
+					accountInvoiceDetail.setDueDate(dueDate);
+
+					
+					
+					XPersistence.getManager().merge(accountInvoiceDetail);
+					
+					XPersistence.commit();
+				}
+				addMessage("account_invoice_detail_saved", details.size());
+			}
+		}
+		super.execute();
+	}
+}

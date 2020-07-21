@@ -1,0 +1,22 @@
+
+Œ
+squid:S135Ú"YReduce the total number of break and continue statements in this loop to use at most one.(ğÁË˜şÿÿÿÿH˜¹RMINORZ
+CODE_SMELL
+squid:ModifiersOrderCheck"EReorder the modifiers to comply with the Java Language Specification.(“—¡‡H™¹RMINORZ
+CODE_SMELL
+€squid:ModifiersOrderCheck"EReorder the modifiers to comply with the Java Language Specification.(Ãı´
+Hš¹RMINORZ
+CODE_SMELL
+€squid:ModifiersOrderCheck"EReorder the modifiers to comply with the Java Language Specification.(˜§¹H›¹RMINORZ
+CODE_SMELL
+Xsquid:S1172K"*Remove this unused method parameter "app".(ì¶Hœ¹RMAJORZ
+CODE_SMELL
+ysquid:HiddenFieldCheckl";Rename "current" which hides the field declared at line 34.(¬”ûÿÿÿÿH¹RMAJORZ
+CODE_SMELL
+]squid:S1172‚".Remove this unused method parameter "request".(ƒ¹ÊìH¹RMAJORZ
+CODE_SMELL
+ˆsquid:S2293Ò"YReplace the type specification in this constructor call with the diamond operator ("<>").(§Äı¼HŸ¹RMINORZ
+CODE_SMELL
+]squid:S1751º"5Remove this "break" statement or make it conditional.(›ûä·H ¹RMAJORZBUG
+tsquid:UnusedPrivateMethodK"8Remove this unused private "createWelcomeModule" method.(ì¶H¡¹RMAJORZ
+CODE_SMELL

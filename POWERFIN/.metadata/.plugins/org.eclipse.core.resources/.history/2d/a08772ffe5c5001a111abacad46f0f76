@@ -1,0 +1,35 @@
+package com.powerfin.task;
+
+import java.util.Date;
+
+import org.openxava.jpa.XPersistence;
+import org.openxava.util.Users;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+
+import com.powerfin.util.UtilApp;
+
+@DisallowConcurrentExecution
+public class IssueElectronicDocument implements Job {
+
+	@Override
+	public void execute(JobExecutionContext context) throws JobExecutionException {
+	
+		JobDataMap dataMap = context.getJobDetail().getJobDataMap();
+		
+		String schema = (String) dataMap.get("SCHEMA");
+		
+		System.out.println("Task "+dataMap.get("SCHEMA")+"."+dataMap.get("TASK_ID")+" start at "+ UtilApp.dateToString(new Date(), UtilApp.completeFormatDate));
+		
+		XPersistence.setDefaultSchema(schema);
+		Users.setCurrent("task");
+		Integer defaultBackgroundAuthorizationAttempts = 1;
+		
+		XPersistence.commit();
+		Users.setCurrent("");
+	}
+
+}

@@ -1,0 +1,17 @@
+
+hsquid:S1710"5Remove the 'Views' wrapper from this annotation group(ĞáÅ®ûÿÿÿÿHÈ¸RMINORZ
+CODE_SMELL
+qsquid:S1710Ô"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿHÉ¸RMINORZ
+CODE_SMELL
+¸squid:S1186ù"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(€Í„üÿÿÿÿHÊ¸RCRITICALZ
+CODE_SMELL
+bsquid:S1948œ"0Make "accountItemTax" transient or serializable.(úÏÅÁHË¸RCRITICALZ
+CODE_SMELL
+ssquid:S1948¥"<Make "accountItemAccountItemType" transient or serializable.(¿÷™ÍşÿÿÿÿHÌ¸RCRITICALZ
+CODE_SMELL
+`squid:S1948¼")Make "brandId" transient or serializable.(öŒœÒûÿÿÿÿHÍ¸RCRITICALZ
+CODE_SMELL
+[squid:S1905”"'Remove this unnecessary cast to "List".(é·›ÙÿÿÿÿÿHÎ¸RMINORZ
+CODE_SMELL
+Zsquid:S1168 "+Return an empty collection instead of null.(¥¹ïHÏ¸RMAJORZ
+CODE_SMELL

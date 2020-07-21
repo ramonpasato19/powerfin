@@ -1,0 +1,33 @@
+package com.powerfin.calculators;
+import java.util.Map;
+
+import org.openxava.actions.*;
+import org.openxava.jpa.XPersistence;
+
+
+import com.powerfin.model.Department;
+
+public class ChangeForPayrollVacation extends OnChangePropertyBaseAction{
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void execute() throws Exception {
+		
+		Map<String, String> department = (Map<String, String>) getView().getRoot().getValue("department");
+		
+		if(department.get("departmentId") != null) {
+			
+			String departmentId = department.get("departmentId");
+			getView().getSubview("employeePerson").setValue("personId", null);
+			getView().getSubview("employeePerson").setValue("identification", null);
+			getView().getSubview("employeePerson").setValue("name", null);
+			
+			getView().getSubview("company").setValue("companyId", XPersistence.getManager()
+					.find(Department.class, departmentId).getCompany().getCompanyId());
+		}
+	}
+
+}
+
+
+

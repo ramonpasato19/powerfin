@@ -1,0 +1,538 @@
+package com.powerfin.model;
+
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.*;
+import javax.persistence.*;
+
+import com.powerfin.helper.AccountHelper;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.CompanyHelper;
+import com.powerfin.helper.EmployeeContractDetailHelper;
+import com.powerfin.model.superclass.CompleteAuditEntity;
+import org.openxava.annotations.*;
+
+/**
+ * This persistent class for employee contract with head and details as Transient
+ * @author Luis Ramón
+ */
+@Entity
+@Table(name = "employee_contract")
+@Views({
+	@View(members = "employeeProfile[employeeContractId; "
+		+ "person;"
+		+ "department;"
+		+ "branch;"
+		+ "contractDistrict;"
+		+ "employeeContractType; fromDateContract;]" 
+		),
+	@View(name = "EmployeeContract",members = "employeeProfile[employeeContractId; "
+		+ "person;"
+		+ "department;"
+		+ "branch;"
+		+ "contractDistrict;"
+		+ "employeeContractType; fromDateContract, toDate;" 
+		+ "]"
+		+ "termsContract{previousSalary; "
+		+ "salary; "
+		+ "accumulatesThirteenth, disability; "
+		+ "accumulatesFourteenth, extraHour; "
+		+ "reserveFunds, paymentBiweekly;}"
+		+ "detailPosition{"
+		+ "schedule;"
+		+ "position;"
+		+ "personBossId; "
+		+ "personBackupId; "
+		+ "}"
+		+ "training{levelInstruction;}" 
+		+ "documentation{employeeContractRequirement;}"
+		+ "paymentMethods{payrollPaymentMethods;}"
+		),
+	@View(name = "FinishEmployeeContract",members = "employeeProfile[employeeContractId; "
+		+ "person;"
+		+ "department;"
+		+ "branch;"
+		+ "contractDistrict;"
+		+ "employeeContractType;"
+		+ "finishEmployeeContractType;"
+		+ "fromDateContract; toDate;"
+		+ "accountStatus" 
+		+ "]"),
+	@View(name = "DetailContractEmployee", members = "person")
+})
+@Tabs({
+	@Tab(name = "TabEmployeeContract", properties = "employeeContractId,person.identification,person.name, department.name,branch.name", baseCondition = "${accountStatus.accountStatusId} = '002'"),
+	@Tab(name = "TabFinishEmployeeContract", properties = "employeeContractId, person.identification, person.name, department.name, branch.name, accountStatus.accountStatusId", baseCondition = "${accountStatus.accountStatusId} in ('002','008')")	
+})
+public class EmployeeContract extends CompleteAuditEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@Column(name = "employee_contract_id", unique = true, length = 32)
+	@ReadOnly
+	private String employeeContractId;
+
+	@ManyToOne
+	@JoinColumn(name="account_status_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@ReadOnly
+	@DescriptionsList(descriptionProperties="name")
+	private AccountStatus accountStatus;
+	
+	@ManyToOne
+	@JoinColumn(name="employee_contract_type_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@DescriptionsList(descriptionProperties="name")
+	@ReadOnly(forViews = "FinishEmployeeContract")
+	private EmployeeContractType employeeContractType;
+	
+	@ManyToOne
+	@JoinColumn(name="finish_employee_contract_type_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@DescriptionsList(descriptionProperties="name")
+	private FinishEmployeeContractType finishEmployeeContractType;
+	
+	@Temporal(TemporalType.DATE)
+	@Required
+	@Column(name="from_date", unique=true, nullable=false)
+	@ReadOnly(forViews="FinishEmployeeContract")
+	private Date fromDateContract;  
+	
+	@Temporal(TemporalType.DATE)
+	@Column(name="to_date", unique=true, nullable=false)
+	@ReadOnly(forViews="EmployeeContract")
+	private Date toDate;
+
+	@ManyToOne
+	@JoinColumn(name = "person_id", nullable = false)
+	@ReferenceView("simple")
+	@Required
+	@NoModify
+	@NoCreate
+	@ReadOnly(forViews="FinishEmployeeContract")
+	private Person person;
+
+	@ManyToOne
+	@JoinColumn(name = "company_id", nullable = false)
+	private Company company;
+
+	@ManyToOne
+	@JoinColumn(name = "department_id", nullable = false)
+	@DescriptionsList(descriptionProperties = "name")
+	@Required
+	@ReadOnly(forViews="FinishEmployeeContract")
+	private Department department;
+
+	@ManyToOne
+	@JoinColumn(name = "level_instruction_id", nullable = false)
+	@DescriptionsList(descriptionProperties = "name")
+	@Required
+	@ReadOnly(forViews="FinishEmployeeContract")
+	private LevelInstruction levelInstruction;
+
+	@ManyToOne
+	@JoinColumn(name = "branch_id", nullable = false)
+	@DescriptionsList(descriptionProperties = "name")
+	@Required
+	@NoModify
+	@NoCreate
+	@ReadOnly
+	private Branch branch;
+	
+	@ManyToOne
+	@JoinColumn(name="contract_district_id")
+	@Required
+	@NoCreate
+	@NoModify
+	@ReferenceView("WorkDistrict")
+	@ReadOnly(forViews="FinishEmployeeContract")
+	private District contractDistrict;
+
+	@OneToMany(mappedBy = "employeeContract", cascade = CascadeType.ALL)
+	private List<EmployeeContractDetail> employeeContractDetail;
+	
+	@OneToMany(mappedBy="employeeContract",cascade=CascadeType.ALL)
+	@ListProperties("employeeContractRequirementId, accountStatus.name, requirement.name, documents, remark") 
+	@ElementCollection
+  	private List<EmployeeContractRequirement> employeeContractRequirement;
+	
+	@Transient
+	private String employeeContractDetailId;
+
+	@Transient
+	@ManyToOne
+	@ReferenceView("simple")
+	@NoModify
+	@NoCreate
+	@SearchAction(value = "PersonEmployeeSearchController.search")
+	private Person personBossId;
+
+	@Transient
+	@ManyToOne
+	@ReferenceView("simple")
+	@NoModify
+	@NoCreate
+	@SearchAction(value = "PersonEmployeeSearchController.search")
+	private Person personBackupId;
+
+	@Transient
+	@ManyToOne
+	@ReferenceView("ViewPosition")
+	@Required
+	private Position position;
+
+	@Transient
+	@ManyToOne
+	@ReferenceView("simple")
+	@Required
+	private Schedule schedule;
+
+	@Transient
+	@Required
+	private BigDecimal salary;
+
+	@Transient
+	@ReadOnly
+	private BigDecimal previousSalary;
+
+	@Transient
+	@Temporal(TemporalType.DATE)
+	@Stereotype("DATE")
+	private Date fromDate;
+
+	@Transient
+	@Temporal(TemporalType.DATE)
+	@Stereotype("DATE")
+	private Date endDate;
+
+	@Transient
+	private Boolean accumulatesThirteenth;
+
+	@Transient
+	private Boolean accumulatesFourteenth;
+
+	@Transient
+	private Boolean reserveFunds;
+	
+	@Transient
+	private Boolean paymentBiweekly;
+
+	@Transient
+	private Boolean disability;
+
+	@Transient
+	private Boolean extraHour;
+
+	@Transient
+	private EmployeeContractDetail currentEmployeeContractDetail;
+	
+	@OneToMany(mappedBy="employeeContract",cascade=CascadeType.ALL)
+	@ListProperties("payrollType.name,invoicePaymentMethod.name,financialEntity.name,  accountNumber") 
+	@ElementCollection
+  	private List<PayrollPaymentMethod> payrollPaymentMethods;
+	
+	public EmployeeContract() {
+		getEmployeeContractDetail();
+	}
+	
+	public String getEmployeeContractId() {
+		return employeeContractId;
+	}
+
+	public void setEmployeeContractId(String employeeContractId) {
+		this.employeeContractId = employeeContractId;
+	}
+
+	public Person getPerson() {
+		return person;
+	}
+
+	public AccountStatus getAccountStatus() {
+		return accountStatus;
+	}
+
+	public void setAccountStatus(AccountStatus accountStatus) {
+		this.accountStatus = accountStatus;
+	}
+	
+	public EmployeeContractType getEmployeeContractType() {
+		return employeeContractType;
+	}
+
+	public void setEmployeeContractType(EmployeeContractType employeeContractType) {
+		this.employeeContractType = employeeContractType;
+	}
+	
+	
+	public FinishEmployeeContractType getFinishEmployeeContractType() {
+		return finishEmployeeContractType;
+	}
+
+	public void setFinishEmployeeContractType(FinishEmployeeContractType finishEmployeeContractType) {
+		this.finishEmployeeContractType = finishEmployeeContractType;
+	}
+
+	public Date getFromDateContract() {
+		return fromDateContract;
+	}
+
+	public void setFromDateContract(Date fromDateContract) {
+		this.fromDateContract = fromDateContract;
+	}
+
+	public Date getToDate() {
+		return toDate;
+	}
+
+	public void setToDate(Date toDate) {
+		this.toDate = toDate;
+	}
+
+	public void setPerson(Person person) {
+		this.person = person;
+	}
+
+	public Company getCompany() {
+		return company;
+	}
+
+	public void setCompany(Company company) {
+		this.company = company;
+	}
+
+	public Department getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(Department department) {
+		this.department = department;
+	}
+
+	public Branch getBranch() {
+		return branch;
+	}
+
+	public void setBranch(Branch branch) {
+		this.branch = branch;
+	}
+
+	public LevelInstruction getLevelInstruction() {
+		return levelInstruction;
+	}
+
+	public void setLevelInstruction(LevelInstruction levelInstruction) {
+		this.levelInstruction = levelInstruction;
+	}
+
+	public List<EmployeeContractDetail> getEmployeeContractDetail() {
+		return employeeContractDetail;
+	}
+
+	public District getContractDistrict() {
+		return contractDistrict;
+	}
+
+	public void setContractDistrict(District contractDistrict) {
+		this.contractDistrict = contractDistrict;
+	}
+
+	public void setEmployeeContractDetail(List<EmployeeContractDetail> employeeContractDetail) {
+		this.employeeContractDetail = employeeContractDetail;
+	}
+	
+	public Person getPersonBossId() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			personBossId=currentEmployeeContractDetail.getPersonBossId();
+		}
+		return personBossId;
+	}	
+	public void setPersonBossId(Person personBossId) {
+		this.personBossId = personBossId;
+	}
+
+	public Person getPersonBackupId() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			personBackupId=currentEmployeeContractDetail.getPersonBackupId();
+		}
+		return personBackupId;
+	}
+
+	public void setPersonBackupId(Person personBackupId) {
+		this.personBackupId = personBackupId;
+	}
+
+	public Position getPosition() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			position=currentEmployeeContractDetail.getPosition();
+		}
+		return position;
+	}
+
+	public void setPosition(Position position) {
+		this.position = position;
+	}
+
+	public Schedule getSchedule() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			schedule=currentEmployeeContractDetail.getSchedule();
+		}
+		return schedule;
+	}
+
+	public void setSchedule(Schedule schedule) {
+		this.schedule = schedule;
+	}
+
+	public BigDecimal getSalary() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			salary=currentEmployeeContractDetail.getSalary();
+		}
+		return salary;
+	}
+
+	public void setSalary(BigDecimal salary) {
+		this.salary = salary;
+	}
+
+	public BigDecimal getPreviousSalary() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			previousSalary=currentEmployeeContractDetail.getPreviousSalary();
+		}
+		return previousSalary;
+	}
+
+	public void setPreviousSalary(BigDecimal previousSalary) {
+		this.previousSalary = previousSalary;
+	}
+
+	public Date getFromDate() {
+		return fromDate;
+	}
+
+	public void setFromDate(Date fromDate) {
+		this.fromDate = fromDate;
+	}
+
+	public Date getEndDate() {
+		return endDate;
+	}
+
+	public void setEndDate(Date endDate) {
+		this.endDate = endDate;
+	}
+
+	public Boolean getAccumulatesThirteenth() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			accumulatesThirteenth=currentEmployeeContractDetail.getAccumulatesThirteenth();
+		}
+		return accumulatesThirteenth;
+	}
+
+	public void setAccumulatesThirteenth(Boolean accumulatesThirteenth) {
+		this.accumulatesThirteenth = accumulatesThirteenth;
+	}
+
+	public Boolean getAccumulatesFourteenth() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			accumulatesFourteenth=currentEmployeeContractDetail.getAccumulatesFourteenth();
+		}
+		return accumulatesFourteenth;		
+	}
+
+	public void setAccumulatesFourteenth(Boolean accumulatesFourteenth) {
+		this.accumulatesFourteenth = accumulatesFourteenth;
+	}
+
+	public Boolean getReserveFunds() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			reserveFunds=currentEmployeeContractDetail.getReserveFunds();
+		}
+		return reserveFunds;
+	}
+
+	public void setReserveFunds(Boolean reserveFunds) {
+		this.reserveFunds = reserveFunds;
+	}
+	
+	public Boolean getPaymentBiweekly() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			paymentBiweekly=currentEmployeeContractDetail.getPaymentBiweekly();
+		}
+		return paymentBiweekly;
+	}
+
+	public void setPaymentBiweekly(Boolean paymentBiweekly) {
+		this.paymentBiweekly = paymentBiweekly;
+	}
+
+	public Boolean getDisability() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			disability=currentEmployeeContractDetail.getDisability();
+		}
+		return disability;
+	}
+
+	public void setDisability(Boolean disability) {
+		this.disability = disability;
+	}
+
+	public Boolean getExtraHour() {
+		if(employeeContractId!=null && getCurrentEmployeeContractDetail()!=null) {
+			extraHour=currentEmployeeContractDetail.getExtraHour();
+		}
+		return extraHour;
+	}
+
+	public void setExtraHour(Boolean extraHour) {
+		this.extraHour = extraHour;
+	}
+	
+	public String getEmployeeContractDetailId() {
+		return employeeContractDetailId;
+	}
+
+	public void setEmployeeContractDetailId(String employeeContractDetailId) {
+		this.employeeContractDetailId = employeeContractDetailId;
+	}
+	
+	
+	public List<EmployeeContractRequirement> getEmployeeContractRequirement() {
+		return employeeContractRequirement;
+	}
+
+	public void setEmployeeContractRequirement(List<EmployeeContractRequirement> employeeContractRequirement) {
+		this.employeeContractRequirement = employeeContractRequirement;
+	}
+
+	public EmployeeContractDetail getCurrentEmployeeContractDetail() {
+		if (this.currentEmployeeContractDetail==null) {
+			this.currentEmployeeContractDetail= EmployeeContractDetailHelper.getCurrentActiveEmployeeContractDetailByContractId(employeeContractId);	
+		}
+		return this.currentEmployeeContractDetail;
+	}
+	
+	public void setCurrentEmployeeContractDetail(EmployeeContractDetail currentEmployeeContractDetail) {
+		this.currentEmployeeContractDetail = currentEmployeeContractDetail;
+	}
+	
+	public List<PayrollPaymentMethod> getPayrollPaymentMethods() {
+		return payrollPaymentMethods;
+	}
+
+	public void setPayrollPaymentMethods(List<PayrollPaymentMethod> payrollPaymentMethods) {
+		this.payrollPaymentMethods = payrollPaymentMethods;
+	}
+	
+	// Method to set "true" for default at property validity of EmployeeContract
+	@PreCreate
+	public void onPersist() throws Exception {
+		accountStatus = AccountStatusHelper.getAccountStatus(AccountHelper.DEFAULT_ACCOUNT_ACTIVE_STATUS);
+		company = CompanyHelper.getCurrent();
+		branch = CompanyHelper.getDefaultBranch();
+	}
+	
+}

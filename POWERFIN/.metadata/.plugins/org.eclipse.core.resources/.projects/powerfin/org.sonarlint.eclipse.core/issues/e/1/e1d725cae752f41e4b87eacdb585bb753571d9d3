@@ -1,0 +1,21 @@
+
+usquid:S1126"AReplace this if-then-else statement by a single return statement.( İ„ÇüÿÿÿÿH¨¸RMINORZ
+CODE_SMELL
+usquid:HiddenFieldCheckõ";Rename "amount" which hides the field declared at line 173.(À„µÆH©¸RMAJORZ
+CODE_SMELL
+usquid:S1126ˆ"AReplace this if-then-else statement by a single return statement.( Æñ§ûÿÿÿÿHª¸RMINORZ
+CODE_SMELL
+usquid:HiddenFieldCheckİ";Rename "amount" which hides the field declared at line 173.(À„µÆH«¸RMAJORZ
+CODE_SMELL
+psquid:S1710k"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH¬¸RMINORZ
+CODE_SMELL
+usquid:HiddenFieldCheckĞ";Rename "amount" which hides the field declared at line 173.(À„µÆH­¸RMAJORZ
+CODE_SMELL
+^squid:S1066™"/Merge this if statement with the enclosing one.(ŠÎ ÆH®¸RMAJORZ
+CODE_SMELL
+qsquid:S1710"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH¯¸RMINORZ
+CODE_SMELL
+hsquid:S17101"5Remove the 'Views' wrapper from this annotation group(ĞáÅ®ûÿÿÿÿH°¸RMINORZ
+CODE_SMELL
+qsquid:S1710Û"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH±¸RMINORZ
+CODE_SMELL

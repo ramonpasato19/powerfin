@@ -1,0 +1,21 @@
+package com.powerfin.helper;
+
+import org.openxava.jpa.*;
+
+import com.powerfin.exception.*;
+import com.powerfin.model.*;
+
+public class AccountStatusHelper {
+	public final static String REQUEST_ACCOUNT_STATUS_ID = "001";
+	public final static String ACTIVE_ACCOUNT_STATUS_ID = "002";
+	public final static String INACTIVE_ACCOUNT_STATUS_ID = "008";
+	//public final static String REQUESTED="001";
+	public final static String ACTIVE="002";
+	public static AccountStatus getAccountStatus(String accountStatus)
+	{
+		AccountStatus status = XPersistence.getManager().find(AccountStatus.class, accountStatus);
+		if (status == null)
+			throw new InternalException("status_not_found: {0}", accountStatus);
+		return status;
+	}
+}

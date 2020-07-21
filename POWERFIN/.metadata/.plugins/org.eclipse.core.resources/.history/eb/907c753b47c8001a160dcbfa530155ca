@@ -1,0 +1,58 @@
+package com.powerfin.calculators;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+import org.openxava.actions.*;
+import org.openxava.jpa.XPersistence;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.JPAHelper;
+import com.powerfin.model.PayrollProvisionVacation;
+
+public class ChangeForPayrollVacation extends OnChangePropertyBaseAction{
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void execute() throws Exception {
+		Map<String, String> employeeContract = (Map<String, String>) getView().getRoot().getValue("employeeContract");
+		String employeeContractId = employeeContract.get("employeeContractId");
+		
+		Date fromDate = (Date) getView().getRoot().getValue("fromDate");
+		Date toDate = (Date) getView().getRoot().getValue("toDate");
+
+		
+		PayrollProvisionVacation payrollProvisionVacation = JPAHelper.getSingleResult(XPersistence.getManager()
+				.createQuery(" SELECT ppv FROM EmployeeContract ec, EmployeeContractDetail ecd, PayrollProvisionVacation ppv "
+						+"where ec.employeeContractId = ecd.employeeContract.employeeContractId "
+						+"and ppv.employeeContractDetail.employeeContractDetailId = ecd.employeeContractDetailId "
+						+"and ec.employeeContractId = :PACCOUNTID "
+						+"and ec.accountStatus.accountStatusId = :PACCOUNTSTATUS "
+						,PayrollProvisionVacation.class)
+						.setParameter("PACCOUNTSTATUS", AccountStatusHelper.ACTIVE_ACCOUNT_STATUS_ID)
+						.setParameter("PACCOUNTID",employeeContractId));
+				
+		if(payrollProvisionVacation != null ) {
+			Calendar fromCurrent = Calendar.getInstance();
+			fromCurrent.setTime(fromDate);
+			int dayFromDate = fromCurrent.get(Calendar.DAY_OF_MONTH);
+			Calendar toCurrent = Calendar.getInstance();
+			toCurrent.setTime(toDate);
+			int dayToDate = toCurrent.get(Calendar.DAY_OF_MONTH);
+			
+			int daysVacation = (dayToDate - dayFromDate ) + 1;
+
+			
+			getView().setValue("dayValueProvision", payrollProvisionVacation.getDayValue());
+			getView().setValue("monetaryValueProvision", payrollProvisionVacation.getMonetaryValue());
+			getView().setValue("daysVacation", daysVacation);
+			
+
+		}
+	}
+
+}
+
+
+
+
+
+

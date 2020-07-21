@@ -1,0 +1,163 @@
+package com.powerfin.actions.search;
+
+import java.io.Serializable;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import org.hibernate.annotations.GenericGenerator;
+import org.openxava.annotations.AsEmbedded;
+import org.openxava.annotations.CollectionView;
+import org.openxava.annotations.CollectionViews;
+import org.openxava.annotations.DescriptionsList;
+import org.openxava.annotations.ListProperties;
+import org.openxava.annotations.NewAction;
+import org.openxava.annotations.NewActions;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.ReferenceView;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.SaveAction;
+import org.openxava.annotations.SaveActions;
+import org.openxava.annotations.Tab;
+import org.openxava.annotations.View;
+
+import com.powerfin.model.AccountStatus;
+import com.powerfin.model.FiscalMonth;
+import com.powerfin.model.FiscalYear;
+import com.powerfin.model.PayRoll;
+import com.powerfin.model.PayrollItemLoad;
+import com.powerfin.model.PayrollType;
+import com.powerfin.model.superclass.CompleteAuditEntity;
+
+/**
+ *	@author LuisRamon
+ *	Entity for persistence payroll consolidated
+ * */
+
+@Entity
+@Table(name="payroll_consolidated")
+@View(name="PayrollConsolidated", members="fiscalMonth; "
+		+ "fiscalYear; "
+		+ "payrollType; "
+		+ "accountStatus; "
+		+ "detail{detailsLoad;}"
+		+ "payroll{payrolls;}")
+@Tab(name="PayrollConsolidated", properties = "fiscalMonth,fiscalYear,payrollType,accountStatus")
+public class PayrollConsolidated extends CompleteAuditEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	@Id
+	@Column(name = "payroll_consolidated_id", unique = true, nullable = false, length = 32)
+	@GeneratedValue(generator = "system-uuid")
+	@GenericGenerator(name = "system-uuid", strategy = "uuid")
+	private String payrollConsolidatedId;
+	
+	@ManyToOne
+	@JoinColumn(name="fiscal_month_id", nullable=true)
+	@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	private FiscalMonth fiscalMonth;
+	
+	@ManyToOne
+	@JoinColumn(name="fiscal_year_id", nullable=true)
+	@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	private FiscalYear fiscalYear;
+	
+	@ManyToOne
+	@JoinColumn(name="payroll_type_id", nullable=true)
+	@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	private PayrollType payrollType;
+	
+	@ManyToOne
+	@JoinColumn(name="account_status_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@Required
+	@DescriptionsList(descriptionProperties="name")
+	private AccountStatus accountStatus;
+	
+
+	@OneToMany(mappedBy="payrollConsolidated", cascade = CascadeType.ALL)
+	@ListProperties("payrollItem.payrollItemId,   payrollItem.account,  payrollItem.name")
+	@CollectionView("test")
+	//@ListProperties("payrollItem.payrollItemId, payrollItem.name")
+	//@ListProperties(forViews = "PayrollItemLoads", value="payrollItem.payrollItemId, payrollItem.name")
+	@AsEmbedded
+	private List<PayrollItemLoad> detailsLoad;
+	
+	
+	@OneToMany(mappedBy="payrollConsolidated", cascade = CascadeType.ALL)
+	//@ListProperties("payRollId") //, fiscalYear.name, fiscalMonth.name, payrollType.name
+	@AsEmbedded
+	private List<PayRoll> payrolls;
+
+	public String getPayrollConsolidatedId() {
+		return payrollConsolidatedId;
+	}
+
+	public void setPayrollConsolidatedId(String payrollConsolidatedId) {
+		this.payrollConsolidatedId = payrollConsolidatedId;
+	}
+
+	public FiscalMonth getFiscalMonth() {
+		return fiscalMonth;
+	}
+
+	public void setFiscalMonth(FiscalMonth fiscalMonth) {
+		this.fiscalMonth = fiscalMonth;
+	}
+
+	public FiscalYear getFiscalYear() {
+		return fiscalYear;
+	}
+
+	public void setFiscalYear(FiscalYear fiscalYear) {
+		this.fiscalYear = fiscalYear;
+	}
+
+	public PayrollType getPayrollType() {
+		return payrollType;
+	}
+
+	public void setPayrollType(PayrollType payrollType) {
+		this.payrollType = payrollType;
+	}
+
+	public AccountStatus getAccountStatus() {
+		return accountStatus;
+	}
+
+	public void setAccountStatus(AccountStatus accountStatus) {
+		this.accountStatus = accountStatus;
+	}
+
+	public List<PayrollItemLoad> getDetailsLoad() {
+		return detailsLoad;
+	}
+
+	public void setDetailsLoad(List<PayrollItemLoad> detailsLoad) {
+		this.detailsLoad = detailsLoad;
+	}
+
+	public List<PayRoll> getPayrolls() {
+		return payrolls;
+	}
+
+	public void setPayrolls(List<PayRoll> payrolls) {
+		this.payrolls = payrolls;
+	}
+}

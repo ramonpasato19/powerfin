@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="com.powerfin.model.AccountItem"/>
+<fullyQualifiedTypeName name="javax.persistence.PostUpdate"/>
+<fullyQualifiedTypeName name="com.powerfin.model.UnitMeasure"/>
+<fullyQualifiedTypeName name="com.powerfin.helper.AccountItemHelper"/>
+<fullyQualifiedTypeName name="java.math.BigDecimal"/>
+<fullyQualifiedTypeName name="java.math.RoundingMode"/>
+<fullyQualifiedTypeName name="com.powerfin.model.FinishEmployeeContractType"/>
+<fullyQualifiedTypeName name="org.openxava.actions.SaveAction"/>
+<fullyQualifiedTypeName name="org.openxava.annotations.View"/>
+<fullyQualifiedTypeName name="java.io.Serializable"/>
+<fullyQualifiedTypeName name="javax.persistence.ManyToOne"/>
+<fullyQualifiedTypeName name="org.openxava.annotations.DescriptionsList"/>
+<fullyQualifiedTypeName name="org.openxava.annotations.NoCreate"/>
+<fullyQualifiedTypeName name="org.openxava.annotations.NoModify"/>
+<fullyQualifiedTypeName name="org.openxava.annotations.ReferenceView"/>
+<fullyQualifiedTypeName name="com.powerfin.model.EmployeeContractDetail"/>
+<fullyQualifiedTypeName name="org.openxava.actions.ViewBaseAction"/>
+<fullyQualifiedTypeName name="com.powerfin.model.Report"/>
+<fullyQualifiedTypeName name="org.openxava.actions.JasperReportBaseAction"/>
+<fullyQualifiedTypeName name="com.powerfin.util.report.ReportBaseAction"/>
+<fullyQualifiedTypeName name="java.util.Map"/>
+<fullyQualifiedTypeName name="com.powerfin.model.PayrollType"/>
+<fullyQualifiedTypeName name="org.openxava.jpa.XPersistence"/>
+<fullyQualifiedTypeName name="com.powerfin.exception.OperativeException"/>
+<fullyQualifiedTypeName name="java.util.HashMap"/>
+<fullyQualifiedTypeName name="net.sf.jasperreports.engine.JRDataSource"/>
+<fullyQualifiedTypeName name="com.powerfin.model.AccountInvoice"/>
+<fullyQualifiedTypeName name="org.apache.poi.hssf.usermodel.HSSFWorkbook"/>
+<fullyQualifiedTypeName name="org.apache.poi.hssf.usermodel.HSSFSheet"/>
+<fullyQualifiedTypeName name="com.powerfin.model.Person"/>
+<fullyQualifiedTypeName name="java.util.Calendar"/>
+<fullyQualifiedTypeName name="com.powerfin.model.PayrollVacation"/>
+<fullyQualifiedTypeName name="com.powerfin.model.EmployeeContract"/>
+<fullyQualifiedTypeName name="com.powerfin.model.AccountStatus"/>
+<fullyQualifiedTypeName name="com.powerfin.model.PayrollProvisionVacation"/>
+<fullyQualifiedTypeName name="com.powerfin.helper.JPAHelper"/>
+<fullyQualifiedTypeName name="com.powerfin.helper.AccountStatusHelper"/>
+<fullyQualifiedTypeName name="org.openxava.annotations.Tab"/>
+<fullyQualifiedTypeName name="com.powerfin.calculators.ChangeForPayrollVacation"/>
+<fullyQualifiedTypeName name="org.openxava.annotations.Tabs"/>
+</qualifiedTypeNameHistroy>

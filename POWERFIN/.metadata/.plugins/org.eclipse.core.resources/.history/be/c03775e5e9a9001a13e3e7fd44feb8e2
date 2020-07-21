@@ -1,0 +1,30 @@
+package com.powerfin.model;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import com.powerfin.helper.PayRollHelper;
+
+public class Vacation {
+	
+	
+	public static BigDecimal execute(PayRoll payRoll, Integer fiscalYearId, Integer fiscalMonthId, BigDecimal nominalSalary, String payRollItemId) {
+		BigDecimal totalContributionable = BigDecimal.ZERO;
+		if (!payRoll.getEmployeeContractDetail().getAccumulatesThirteenth()) {
+			 return getThirteenth(payRoll, totalContributionable);
+		}else {
+			return totalContributionable;
+		}
+		
+	}
+	
+	public static BigDecimal getThirteenth(PayRoll payRoll , BigDecimal totalContributionable) {
+		for (PayRollDetail payRollDetail : PayRollHelper.getListPayRollDetail(payRoll.getPayRollId())) {
+	    	 if (payRollDetail.getPayrollItem().getPayrollItemId().compareTo(PayRollHelper.TOTAL_CONTRIBUTIONABLE)== 0) {
+	    		 totalContributionable =totalContributionable.add(payRollDetail.getAmount());
+	    	 }
+	     }
+		return totalContributionable.divide(new BigDecimal(12), 2, RoundingMode.HALF_UP);
+	}
+
+}

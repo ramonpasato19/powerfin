@@ -1,0 +1,13 @@
+
+º%squid:RedundantThrowsDeclarationCheckµ"lRemove the declaration of thrown exception 'java.lang.Exception', as it cannot be thrown from method's body.(Ìƒ¢üÿÿÿÿH²¸RMINORZ
+CODE_SMELL
+bsquid:S1710l"4Remove the 'Tabs' wrapper from this annotation group(Õ«„H³¸RMINORZ
+CODE_SMELL
+qsquid:S1710È"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH´¸RMINORZ
+CODE_SMELL
+¸squid:S1186É"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(áøëÄøÿÿÿÿHµ¸RCRITICALZ
+CODE_SMELL
+ssquid:S1710ë"?Remove the 'ListsProperties' wrapper from this annotation group(¾™ ßùÿÿÿÿH¶¸RMINORZ
+CODE_SMELL
+hsquid:S1710"5Remove the 'Views' wrapper from this annotation group(ĞáÅ®ûÿÿÿÿH·¸RMINORZ
+CODE_SMELL

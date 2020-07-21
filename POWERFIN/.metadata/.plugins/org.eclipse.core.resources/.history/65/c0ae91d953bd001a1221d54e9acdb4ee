@@ -1,0 +1,297 @@
+package com.powerfin.actions.payroll;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Map;
+
+import org.openxava.actions.SaveAction;
+import org.openxava.jpa.XPersistence;
+import com.powerfin.exception.OperativeException;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.EmployeeContractDetailHelper;
+import com.powerfin.helper.PayrollOvertimeHelper;
+import com.powerfin.model.EmployeeContractDetail;
+import com.powerfin.model.File;
+import com.powerfin.model.FiscalMonth;
+import com.powerfin.model.FiscalYear;
+import com.powerfin.model.PayrollOvertime;
+import com.powerfin.model.PayrollOvertimeType;
+import com.powerfin.model.types.Types;
+import com.powerfin.model.types.Types.YesNoIntegerType;
+
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.usermodel. *;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class ImportOvertimeFileSaveAction extends SaveAction{
+	
+	@SuppressWarnings({ "unchecked", "resource", "unused" })
+	public void execute() throws Exception {
+		String format = null;
+		Map<String, Integer> fiscalYear = (Map<String, Integer>) getView().getRoot().getValue("fiscalYear");
+		Map<String, Integer> fiscalMonth = (Map<String, Integer>) getView().getRoot().getValue("fiscalMonth");
+		Integer fiscalYearId = fiscalYear.get("fiscalYearId");
+		Integer fiscalMonthId = fiscalMonth.get("fiscalMonthId");
+		String fileId = (String) getView().getValue("file");
+		System.out.println("fileId          "+fileId);
+		Types.YesNoIntegerType valuesIsMonetary = (YesNoIntegerType) getView().getValue("valuesIsMonetary");
+		
+		if (fileId == null||fileId.isEmpty()) {
+			throw new OperativeException("file_is_required");
+		} else {
+			try {
+				clearOvertimeOld(fiscalMonthId, fiscalYearId);
+				
+				File file = (File)XPersistence.getManager().find(File.class, fileId);
+				System.out.println("archivo         "+file.getName().contains("xls"));
+
+				if(file.getName().contains("xlsx")) {
+					
+				InputStream excelFile = new ByteArrayInputStream(file.getData());
+				XSSFWorkbook workbookXssf = new XSSFWorkbook(excelFile);
+				XSSFSheet sheet = workbookXssf.getSheetAt(0);
+
+				
+	            
+//	    	    String overtimeTypeNightShift = sheet.getRow(0).getCell(1).getStringCellValue();
+	    	    String overtimeTypeNightShift = "HEN";
+//	    	    String overtimeTypeSuplementary = sheet.getRow(0).getCell(2).getStringCellValue();
+	    	    String overtimeTypeSuplementary = "HES";
+//	    	    String overtimeTypeExtraordinary = sheet.getRow(0).getCell(3).getStringCellValue();
+	    	    String overtimeTypeExtraordinary = "HEE";
+	    	    
+	    	    System.out.println(":........."+overtimeTypeNightShift);
+	    	    System.out.println(":........."+overtimeTypeSuplementary);
+	    	    System.out.println(":........."+overtimeTypeExtraordinary);
+	    	    
+	    	    if(overtimeTypeNightShift != null && overtimeTypeSuplementary != null && overtimeTypeExtraordinary != null) {
+	    	    	
+	    	    	int starRow = sheet.getFirstRowNum()+1; //More one because the cell 0 contains only titles
+		    	    int endRow = sheet.getLastRowNum();
+	    	    	
+	    	    	PayrollOvertimeType payrollOvertimeTypeNightShift = XPersistence.getManager().find(PayrollOvertimeType.class, overtimeTypeNightShift);
+	    	    	PayrollOvertimeType payrollOvertimeTypeSuplementary = XPersistence.getManager().find(PayrollOvertimeType.class, overtimeTypeSuplementary);
+	    	    	PayrollOvertimeType payrollOvertimeTypeExtraordinary = XPersistence.getManager().find(PayrollOvertimeType.class, overtimeTypeExtraordinary);
+    	    		for(int i=starRow;i<=endRow;i++) {
+    	    			
+    	    			Cell identification = sheet.getRow(i).getCell(0);
+    	    			System.out.println("identification____________________________________"+identification);
+    	    			EmployeeContractDetail employeeContractDetail = EmployeeContractDetailHelper.getCurrentActiveEmployeeContractByPersonIdentification(identification.getStringCellValue());
+    	    			System.out.println("employeeContractDetail____________________"+ employeeContractDetail.getEmployeeContract().getEmployeeContractId());
+    	    			if (employeeContractDetail == null) {
+    	    				System.out.print("IDENTIFICACION = "+identification);
+    	    				addError("employeed_contract_detail_dont_exist", identification);
+    	    				continue;
+    	    			}
+	    				if(identification != null && !identification.getStringCellValue().isEmpty() && employeeContractDetail.getSalary() != null) {
+	    					BigDecimal salary = employeeContractDetail.getSalary();
+							BigDecimal hourlyWage = PayrollOvertimeHelper.getHourlyWage(salary);
+	    					
+							if(valuesIsMonetary.equals(Types.YesNoIntegerType.NO)) {
+    	    			    	if(getCellValue(sheet.getRow(i).getCell(1)) != null) {
+    	    			    		BigDecimal hours = getCellValue(sheet.getRow(i).getCell(1));
+    	    			    		//BigDecimal hours = new BigDecimal("10.00");
+    	    			    		System.out.println("salary:........."+ salary);
+    	    			    		System.out.println("hourlyWage:........."+hourlyWage);
+    	    			    		System.out.println("payrollOvertimeTypeNightShift:........."+payrollOvertimeTypeNightShift.getPercentage());
+    	    			    		System.out.println("hours:........."+hours);
+    	    			    		BigDecimal monetaryValue = PayrollOvertimeHelper.getOvertimeMonetaryValue(salary, hourlyWage, payrollOvertimeTypeNightShift.getPercentage(),hours);
+    	    			    		createOvertimeForEmployee(employeeContractDetail,payrollOvertimeTypeNightShift,monetaryValue,hours,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			
+    	    			        if(getCellValue(sheet.getRow(i).getCell(2)) != null ) {
+    	    			        	BigDecimal hours = getCellValue(sheet.getRow(i).getCell(2));
+    	    			        	BigDecimal monetaryValue = PayrollOvertimeHelper.getOvertimeMonetaryValue(salary, hourlyWage, payrollOvertimeTypeSuplementary.getPercentage(),hours);
+    	    			    		createOvertimeForEmployee(employeeContractDetail,payrollOvertimeTypeSuplementary,monetaryValue,hours,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			
+    	    			        if(getCellValue(sheet.getRow(i).getCell(3)) != null ) {
+    	    			        	BigDecimal hours = getCellValue(sheet.getRow(i).getCell(3));
+    	    			        	BigDecimal monetaryValue = PayrollOvertimeHelper.getOvertimeMonetaryValue(salary, hourlyWage, payrollOvertimeTypeSuplementary.getPercentage(),hours);
+    	    			    		createOvertimeForEmployee(employeeContractDetail,payrollOvertimeTypeExtraordinary,monetaryValue,hours,fiscalMonthId,fiscalYearId);
+    	    			        }
+							}else {
+								if(getCellValue(sheet.getRow(i).getCell(1)) != null ) {
+    	    			    		BigDecimal monetaryValue = getCellValue(sheet.getRow(i).getCell(1));
+    	    			    		createOvertimeForEmployee(employeeContractDetail, payrollOvertimeTypeNightShift,monetaryValue, null,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			        if(getCellValue(sheet.getRow(i).getCell(2)) != null ) {
+    	    			    		BigDecimal monetaryValue = getCellValue(sheet.getRow(i).getCell(2));
+    	    			    		createOvertimeForEmployee(employeeContractDetail, payrollOvertimeTypeSuplementary,monetaryValue, null,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			        if(getCellValue(sheet.getRow(i).getCell(3)) != null ) {
+    	    			    		BigDecimal monetaryValue = getCellValue(sheet.getRow(i).getCell(3));
+    	    			    		createOvertimeForEmployee(employeeContractDetail, payrollOvertimeTypeExtraordinary,monetaryValue, null,fiscalMonthId,fiscalYearId);
+    	    			        }
+							}
+    	    	    	}
+		            }
+    	    		workbookXssf.close();
+		    		XPersistence.commit();
+		    		addMessage("saved_overtime_successfully");
+		    		getView().reset();
+	    	    }else {
+	    	    	throw new OperativeException("no_overtime_type");
+	    	    }
+				}
+				
+			else if(file.getName().contains("xls")){
+				
+				InputStream excelFile = new ByteArrayInputStream(file.getData());
+				HSSFWorkbook workbookHssf = new HSSFWorkbook(excelFile);
+				HSSFSheet sheet = workbookHssf.getSheetAt(0);
+				
+//	    	    String overtimeTypeNightShift = sheet.getRow(0).getCell(1).getStringCellValue();
+	    	    String overtimeTypeNightShift = "HEN";
+//	    	    String overtimeTypeSuplementary = sheet.getRow(0).getCell(2).getStringCellValue();
+	    	    String overtimeTypeSuplementary = "HES";
+//	    	    String overtimeTypeExtraordinary = sheet.getRow(0).getCell(3).getStringCellValue();
+	    	    String overtimeTypeExtraordinary = "HEE";
+	    	    
+	    	    System.out.println(":........."+overtimeTypeNightShift);
+	    	    System.out.println(":........."+overtimeTypeSuplementary);
+	    	    System.out.println(":........."+overtimeTypeExtraordinary);
+	    	    
+	    	    if(overtimeTypeNightShift != null && overtimeTypeSuplementary != null && overtimeTypeExtraordinary != null) {
+	    	    	
+	    	    	int starRow = sheet.getFirstRowNum()+1; //More one because the cell 0 contains only titles
+		    	    int endRow = sheet.getLastRowNum();
+	    	    	
+	    	    	PayrollOvertimeType payrollOvertimeTypeNightShift = XPersistence.getManager().find(PayrollOvertimeType.class, overtimeTypeNightShift);
+	    	    	PayrollOvertimeType payrollOvertimeTypeSuplementary = XPersistence.getManager().find(PayrollOvertimeType.class, overtimeTypeSuplementary);
+	    	    	PayrollOvertimeType payrollOvertimeTypeExtraordinary = XPersistence.getManager().find(PayrollOvertimeType.class, overtimeTypeExtraordinary);
+    	    		for(int i=starRow;i<=endRow;i++) {
+    	    			
+    	    			Cell identification = sheet.getRow(i).getCell(0);
+    	    			System.out.println("identification____________________________________"+identification);
+    	    			EmployeeContractDetail employeeContractDetail = EmployeeContractDetailHelper.getCurrentActiveEmployeeContractByPersonIdentification(identification.getStringCellValue());
+    	    			System.out.println("employeeContractDetail____________________"+ employeeContractDetail.getEmployeeContract().getEmployeeContractId());
+    	    			if (employeeContractDetail == null) {
+    	    				System.out.print("IDENTIFICACION = "+identification);
+    	    				addError("employeed_contract_detail_dont_exist", identification);
+    	    				continue;
+    	    			}
+	    				if(identification != null && !identification.getStringCellValue().isEmpty() && employeeContractDetail.getSalary() != null) {
+	    					BigDecimal salary = employeeContractDetail.getSalary();
+							BigDecimal hourlyWage = PayrollOvertimeHelper.getHourlyWage(salary);
+	    					
+							if(valuesIsMonetary.equals(Types.YesNoIntegerType.NO)) {
+    	    			    	if(getCellValue(sheet.getRow(i).getCell(1)) != null) {
+    	    			    		BigDecimal hours = getCellValue(sheet.getRow(i).getCell(1));
+    	    			    		//BigDecimal hours = new BigDecimal("10.00");
+    	    			    		System.out.println("salary:........."+ salary);
+    	    			    		System.out.println("hourlyWage:........."+hourlyWage);
+    	    			    		System.out.println("payrollOvertimeTypeNightShift:........."+payrollOvertimeTypeNightShift.getPercentage());
+    	    			    		System.out.println("hours:........."+hours);
+    	    			    		BigDecimal monetaryValue = PayrollOvertimeHelper.getOvertimeMonetaryValue(salary, hourlyWage, payrollOvertimeTypeNightShift.getPercentage(),hours);
+    	    			    		createOvertimeForEmployee(employeeContractDetail,payrollOvertimeTypeNightShift,monetaryValue,hours,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			
+    	    			        if(getCellValue(sheet.getRow(i).getCell(2)) != null ) {
+    	    			        	BigDecimal hours = getCellValue(sheet.getRow(i).getCell(2));
+    	    			        	BigDecimal monetaryValue = PayrollOvertimeHelper.getOvertimeMonetaryValue(salary, hourlyWage, payrollOvertimeTypeSuplementary.getPercentage(),hours);
+    	    			    		createOvertimeForEmployee(employeeContractDetail,payrollOvertimeTypeSuplementary,monetaryValue,hours,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			
+    	    			        if(getCellValue(sheet.getRow(i).getCell(3)) != null ) {
+    	    			        	BigDecimal hours = getCellValue(sheet.getRow(i).getCell(3));
+    	    			        	BigDecimal monetaryValue = PayrollOvertimeHelper.getOvertimeMonetaryValue(salary, hourlyWage, payrollOvertimeTypeSuplementary.getPercentage(),hours);
+    	    			    		createOvertimeForEmployee(employeeContractDetail,payrollOvertimeTypeExtraordinary,monetaryValue,hours,fiscalMonthId,fiscalYearId);
+    	    			        }
+							}else {
+								if(getCellValue(sheet.getRow(i).getCell(1)) != null ) {
+    	    			    		BigDecimal monetaryValue = getCellValue(sheet.getRow(i).getCell(1));
+    	    			    		createOvertimeForEmployee(employeeContractDetail, payrollOvertimeTypeNightShift,monetaryValue, null,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			        if(getCellValue(sheet.getRow(i).getCell(2)) != null ) {
+    	    			    		BigDecimal monetaryValue = getCellValue(sheet.getRow(i).getCell(2));
+    	    			    		createOvertimeForEmployee(employeeContractDetail, payrollOvertimeTypeSuplementary,monetaryValue, null,fiscalMonthId,fiscalYearId);
+    	    			        }
+    	    			        if(getCellValue(sheet.getRow(i).getCell(3)) != null ) {
+    	    			    		BigDecimal monetaryValue = getCellValue(sheet.getRow(i).getCell(3));
+    	    			    		createOvertimeForEmployee(employeeContractDetail, payrollOvertimeTypeExtraordinary,monetaryValue, null,fiscalMonthId,fiscalYearId);
+    	    			        }
+							}
+    	    	    	}
+		            }
+    	    		workbookHssf.close();
+		    		XPersistence.commit();
+		    		addMessage("saved_overtime_successfully");
+		    		getView().reset();
+	    	    }else {
+	    	    	throw new OperativeException("no_overtime_type");
+	    	    }
+			
+			}else
+				System.out.println("error de Archivo");
+				
+				
+			}catch (Exception e) {
+				e.printStackTrace();
+				throw new OperativeException("read_file_failed");
+			}
+			
+
+		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	private BigDecimal getCellValue(Cell percentCell) {
+		BigDecimal percentValue = null;
+        switch(percentCell.getCellType()) {
+            case Cell.CELL_TYPE_NUMERIC:
+            	percentValue = new BigDecimal(percentCell.getNumericCellValue());
+                break;
+            case Cell.CELL_TYPE_STRING:
+            	percentValue = new BigDecimal(percentCell.getStringCellValue());
+                break;
+            default:
+                break;
+        }
+		return percentValue;
+	}
+
+	private void createOvertimeForEmployee(EmployeeContractDetail employeeContractDetail, PayrollOvertimeType payrollOvertimeType, BigDecimal monetaryValue, 
+			BigDecimal hours, Integer fiscalMonthId, Integer fiscalYearId){
+		
+		PayrollOvertime payrollOvertime= new PayrollOvertime();
+		BigDecimal hourlyWage = PayrollOvertimeHelper.getHourlyWage(employeeContractDetail.getSalary());
+		Integer totalMinutes = null;
+		if (hours==null) {
+			totalMinutes = PayrollOvertimeHelper.getTotalMinutesValue(employeeContractDetail.getSalary(), hourlyWage, payrollOvertimeType.getPercentage(), monetaryValue);
+		}else {
+			totalMinutes = PayrollOvertimeHelper.convertHoursToMinutes(hours);
+		}
+		try {
+			payrollOvertime.setEmployeePerson(employeeContractDetail.getEmployeeContract().getPerson());
+			payrollOvertime.setPayrollOvertimeType(payrollOvertimeType);
+			payrollOvertime.setMonetaryValue(monetaryValue);
+			payrollOvertime.setHour(totalMinutes/60);
+			payrollOvertime.setMinutes(totalMinutes%60);
+			payrollOvertime.setFiscalMonth(XPersistence.getManager().find(FiscalMonth.class,fiscalMonthId));
+			payrollOvertime.setFiscalYear(XPersistence.getManager().find(FiscalYear.class,fiscalYearId));
+			payrollOvertime.setAccountStatus(AccountStatusHelper.getAccountStatus(AccountStatusHelper.REQUEST_ACCOUNT_STATUS_ID));
+	    	XPersistence.getManager().persist(payrollOvertime);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
+	}
+	private void clearOvertimeOld(Integer fiscalMonthId, Integer fiscalYearId ) {
+		try {
+			XPersistence.getManager().createQuery("DELETE FROM PayrollOvertime o where "
+					+ " o.fiscalMonth.fiscalMonthId = :PFISCAL_MONTH "
+					+ " and o.fiscalYear.fiscalYearId = :PFISCAL_YEAR ")
+			.setParameter("PFISCAL_MONTH", fiscalMonthId)
+			.setParameter("PFISCAL_YEAR", fiscalYearId)
+			.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+

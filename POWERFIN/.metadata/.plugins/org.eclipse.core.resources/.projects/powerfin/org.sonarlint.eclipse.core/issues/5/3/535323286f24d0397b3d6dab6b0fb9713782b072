@@ -1,0 +1,49 @@
+
+squid:S00120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(â‹¨îıÿÿÿÿH–°RMINORZ
+CODE_SMELL
+rsquid:UselessImportCheck"7Remove this unused import 'java.text.SimpleDateFormat'.(ú¡ÙÛH—°RMINORZ
+CODE_SMELL
+xsquid:UselessImportCheck">Remove this unused import 'com.powerfin.helper.CompanyHelper'.(ÓÓôxH˜°RMINORZ
+CODE_SMELL
+|squid:UselessImportCheck"ARemove this unused import 'org.openxava.util.jxls.JxlsConstants'.(›Œ€şH™°RMINORZ
+CODE_SMELL
+ksquid:UselessImportCheck"0Remove this unused import 'java.util.ArrayList'.(÷‰îƒHš°RMINORZ
+CODE_SMELL
+}squid:UselessImportCheck"=Remove this unused import 'org.openxava.util.jxls.JxlsSheet'.(±‹¦ÿùÿÿÿÿH›°RMINORZ
+CODE_SMELL
+„squid:UselessImportCheck%"IRemove this unused import 'com.powerfin.model.ProductProviderDetailTemp'.(¶–×øHœ°RMINORZ
+CODE_SMELL
+‡squid:UselessImportCheck"GRemove this unused import 'org.openxava.web.servlets.ReportXLSServlet'.(ßå›úÿÿÿÿH°RMINORZ
+CODE_SMELL
+~squid:UselessImportCheck">Remove this unused import 'com.powerfin.helper.AccountHelper'.(Åê‘„ùÿÿÿÿH°RMINORZ
+CODE_SMELL
+wsquid:UselessImportCheck#"7Remove this unused import 'com.powerfin.model.Product'.(ÆµåøÿÿÿÿHŸ°RMINORZ
+CODE_SMELL
+qsquid:UselessImportCheck!"6Remove this unused import 'com.powerfin.model.Branch'.(µº—H °RMINORZ
+CODE_SMELL
+qsquid:UselessImportCheck""6Remove this unused import 'com.powerfin.model.Person'.(…’ªÁH¡°RMINORZ
+CODE_SMELL
+€squid:UselessImportCheck"@Remove this unused import 'org.openxava.actions.IForwardAction'.(Šå•ŠÿÿÿÿÿH¢°RMINORZ
+CODE_SMELL
+}squid:UselessImportCheck"=Remove this unused import 'org.openxava.util.jxls.JxlsStyle'.(‰ğ›úøÿÿÿÿH£°RMINORZ
+CODE_SMELL
+}squid:UselessImportCheck$"CRemove this unused import 'com.powerfin.model.ProductProviderTemp'.(ÜÌ€H¤°RMINORZ
+CODE_SMELL
+}squid:UselessImportCheck "=Remove this unused import 'com.powerfin.model.AccountStatus'.(ÍùÅòüÿÿÿÿH¥°RMINORZ
+CODE_SMELL
+{squid:UselessImportCheck"@Remove this unused import 'com.powerfin.helper.ParameterHelper'.(¼Ô±«H¦°RMINORZ
+CODE_SMELL
+~squid:UselessImportCheck)"CRemove this unused import 'com.powerfin.model.types.Types.InOrOut'.(¢¿ÎÿH§°RMINORZ
+CODE_SMELL
+tsquid:UselessImportCheck"4Remove this unused import 'org.openxava.util.Users'.(³û§ÛşÿÿÿÿH¨°RMINORZ
+CODE_SMELL
+€squid:UselessImportCheck"@Remove this unused import 'org.openxava.util.jxls.JxlsWorkbook'.(€×‡üÿÿÿÿH©°RMINORZ
+CODE_SMELL
+squid:UselessImportCheck"FRemove this unused import 'com.powerfin.exception.OperativeException'.(í«¥¶Hª°RMINORZ
+CODE_SMELL
+{squid:UselessImportCheck";Remove this unused import 'com.powerfin.helper.UserHelper'.(Ô¥²şÿÿÿÿH«°RMINORZ
+CODE_SMELL
+psquid:UselessImportCheck("5Remove this unused import 'com.powerfin.model.Unity'.(øà„H¬°RMINORZ
+CODE_SMELL
+msquid:S11612":Add the "@Override" annotation above this method signature(ÔßùìùÿÿÿÿH­°RMAJORZ
+CODE_SMELL

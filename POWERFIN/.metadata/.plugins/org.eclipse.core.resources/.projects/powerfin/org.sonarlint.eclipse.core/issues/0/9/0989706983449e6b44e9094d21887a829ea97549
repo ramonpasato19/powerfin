@@ -1,0 +1,25 @@
+
+squid:S1488€"_Immediately return this expression instead of assigning it to the temporary variable "account".(º÷ÎÉH®°RMINORZ
+CODE_SMELL
+squid:S1488"_Immediately return this expression instead of assigning it to the temporary variable "account".(º÷ÎÉH¯°RMINORZ
+CODE_SMELL
+·squid:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(òŠ„ÙşÿÿÿÿH°°RCRITICALZ
+CODE_SMELL
+·squid:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(Õ÷úŠşÿÿÿÿH±°RCRITICALZ
+CODE_SMELL
+Œsquid:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(ãÈÉûÿÿÿÿH²°RMINORZ
+CODE_SMELL
+\squid:S1905)")Remove this unnecessary cast to "String".(‘¬¸±ûÿÿÿÿH³°RMINORZ
+CODE_SMELL
+\squid:S1905/")Remove this unnecessary cast to "String".(‘×ˆÒüÿÿÿÿH´°RMINORZ
+CODE_SMELL
+Wsquid:S1905G")Remove this unnecessary cast to "String".(óÄ¾Hµ°RMINORZ
+CODE_SMELL
+Xsquid:S1905 "*Remove this unnecessary cast to "Integer".(ÕÃ\H¶°RMINORZ
+CODE_SMELL
+Xsquid:S1905¨"*Remove this unnecessary cast to "Integer".(ÕÃ\H·°RMINORZ
+CODE_SMELL
+„squid:S3776­"RRefactor this method to reduce its Cognitive Complexity from 17 to the 15 allowed.(° ë›H¸°RCRITICALZ
+CODE_SMELL
+isquid:S1161­":Add the "@Override" annotation above this method signature(° ë›H¹°RMAJORZ
+CODE_SMELL

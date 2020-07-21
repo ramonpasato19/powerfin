@@ -1,0 +1,33 @@
+
+nsquid:S1710•"?Remove the 'CollectionViews' wrapper from this annotation group(ÛË«¶H¸¸RMINORZ
+CODE_SMELL
+qsquid:S1710‡"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH¹¸RMINORZ
+CODE_SMELL
+lsquid:S1948°"5Make "accountInvoiceTaxes" transient or serializable.(•ª¿îÿÿÿÿÿHº¸RCRITICALZ
+CODE_SMELL
+\squid:S1948è"%Make "pos" transient or serializable.(º†ÔÄıÿÿÿÿH»¸RCRITICALZ
+CODE_SMELL
+osquid:S1948­"8Make "accountInvoicePayments" transient or serializable.(ˆı€ØıÿÿÿÿH¼¸RCRITICALZ
+CODE_SMELL
+csquid:S1710˜"4Remove the 'Tabs' wrapper from this annotation group(Õ«„H½¸RMINORZ
+CODE_SMELL
+qsquid:S1710ü"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿH¾¸RMINORZ
+CODE_SMELL
+fsquid:S1710·"7Remove the 'Actions' wrapper from this annotation group(ÓÇ÷¥H¿¸RMINORZ
+CODE_SMELL
+jsquid:S1710£";Remove the 'SaveActions' wrapper from this annotation group(Û´¿äHÀ¸RMINORZ
+CODE_SMELL
+Xsquid:S1948á"'Make "unity" transient or serializable.(Şëç7HÁ¸RCRITICALZ
+CODE_SMELL
+nsquid:S1710œ":Remove the 'NewActions' wrapper from this annotation group(™Ä‘ÿÿÿÿÿHÂ¸RMINORZ
+CODE_SMELL
+`squid:S1948§")Make "details" transient or serializable.(„«›ÓúÿÿÿÿHÃ¸RCRITICALZ
+CODE_SMELL
+hsquid:S1710"5Remove the 'Views' wrapper from this annotation group(ĞáÅ®ûÿÿÿÿHÄ¸RMINORZ
+CODE_SMELL
+qsquid:S1710º"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿHÅ¸RMINORZ
+CODE_SMELL
+¸squid:S1186¿"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(¬»–øÿÿÿÿHÆ¸RCRITICALZ
+CODE_SMELL
+qsquid:S1710¡"=Remove the 'SearchActions' wrapper from this annotation group(‚çÃ…ûÿÿÿÿHÇ¸RMINORZ
+CODE_SMELL

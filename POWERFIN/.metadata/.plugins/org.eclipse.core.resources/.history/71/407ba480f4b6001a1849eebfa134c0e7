@@ -1,0 +1,211 @@
+package com.powerfin.actions.payroll;
+
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.openxava.actions.ViewBaseAction;
+import org.openxava.jpa.XPersistence;
+import org.openxava.util.DataSourceConnectionProvider;
+import org.openxava.util.Is;
+import org.openxava.util.Users;
+import com.powerfin.exception.OperativeException;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.CompanyHelper;
+import com.powerfin.helper.JPAHelper;
+import com.powerfin.helper.ParameterHelper;
+import com.powerfin.helper.ReportHelper;
+import com.powerfin.model.Account;
+import com.powerfin.model.Company;
+import com.powerfin.model.EmployeeContract;
+import com.powerfin.model.EmployeeContractDetail;
+import com.powerfin.model.PayrollType;
+import com.powerfin.model.dto.ReportDTO;
+import com.powerfin.service.EmailSenderService;
+import com.powerfin.service.EmailSenderService.Attachment;
+import com.powerfin.util.UtilApp;
+import com.powerfin.util.report.ReportBaseAction;
+import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+
+/**
+ * @author Luis Ramon
+ * Class to get report payrol personal for send email
+ */
+public class IssueElectronicPayrolAction extends ViewBaseAction{  
+
+	private static Log log = LogFactory.getLog(ReportBaseAction.class);
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void execute() throws Exception {
+		
+		Company company = XPersistence.getManager().find(Company.class, CompanyHelper.COMPANY_ID);
+		EmailSenderService emailService;
+				
+		Map<String, Integer> fiscalYearMap = (Map<String, Integer>) getView().getRoot().getValue("fiscalYear");
+		Map<String, Integer> fiscalMonthMap = (Map<String, Integer>) getView().getRoot().getValue("fiscalMonth");
+		Map<String, String> payrollTypeMap = (Map<String, String>) getView().getRoot().getValue("payrollType");
+		Map<String, String> employeeContractDetailMap = (Map<String, String>) getView().getRoot().getValue("employeeContractDetail");
+		
+		PayrollType payRollType = XPersistence.getManager().find(PayrollType.class, payrollTypeMap.get("payrollTypeId"));
+		Integer fiscalYearId = fiscalYearMap.get("fiscalYearId");
+		Integer fiscalMonthId = fiscalMonthMap.get("fiscalMonthId");
+		
+		if (fiscalMonthId == null)
+			throw new OperativeException("fiscal_month_requerid");
+		
+		if (fiscalYearId == null)
+			throw new OperativeException("fiscal_year_requerid");
+		
+		if (payRollType == null) 
+			throw new OperativeException("payroll_type_requerid");
+		
+		if (employeeContractDetailMap.get("employeeContractDetailId") == null)
+			throw new OperativeException("employee_contract_detail_requerid");
+		
+		EmployeeContractDetail employeeContractDetail = XPersistence.getManager().find(EmployeeContractDetail.class, employeeContractDetailMap.get("employeeContractDetailId"));
+		
+		EmployeeContract employeeContract = JPAHelper.getSingleResult(XPersistence.getManager()
+				.createQuery(" SELECT ec FROM EmployeeContract ec, EmployeeContractDetail ecd, PayRoll pr "
+						+"where ec.employeeContractId = ecd.employeeContract.employeeContractId "
+						+"and pr.employeeContractDetail.employeeContractDetailId = ecd.employeeContractDetailId "
+						+"and ec.employeeContractId = :PACCOUNTID "
+						+"and ec.accountStatus.accountStatusId = :PACCOUNTSTATUS "
+						+"and pr.accountStatus.accountStatusId = :PACCOUNTSTATUS "
+						+"and pr.fiscalYear.fiscalYearId = :PYEAR "
+						+"and pr.fiscalMonth.fiscalMonthId = :PMONTH "
+						+"and pr.payrollType.payrollTypeId = :PPAYROLLTYPE ",EmployeeContract.class)
+						.setParameter("PYEAR", fiscalYearId)
+						.setParameter("PMONTH", fiscalMonthId)
+						.setParameter("PPAYROLLTYPE", payRollType.getPayrollTypeId())
+						.setParameter("PACCOUNTSTATUS", AccountStatusHelper.ACTIVE_ACCOUNT_STATUS_ID)
+						.setParameter("PACCOUNTID",employeeContractDetail.getEmployeeContract().getEmployeeContractId()));
+
+		if(employeeContract !=null) {
+		String accountId=employeeContract.getEmployeeContractId();
+		Account account = XPersistence.getManager().find(Account.class, accountId);
+		validate(account);
+		UtilApp.isValidEmail(account.getPerson().getEmail()); 
+		if(account.getAccountId()!=null)
+		{
+			Map parameters = new HashMap();	
+			
+			parameters.put("ORG_NAME", CompanyHelper.getDefaultPerson().getName());
+			parameters.put("SCHEMA", company.getOxorganizationId().toLowerCase()); 
+			parameters.put("USER", Users.getCurrentUserInfo().getId());
+			parameters.put("DATE", CompanyHelper.getCurrentAccountingDate());
+			parameters.put("FISCAL_MONTH", fiscalMonthId);
+			parameters.put("FISCAL_YEAR", fiscalYearId);
+			parameters.put("PAYROLL_TYPE", payRollType.getPayrollTypeId());
+			parameters.put("EMPLOYEE_CONTRACT", employeeContractDetail.getEmployeeContract().getEmployeeContractId());
+		
+			ReportDTO report = ReportHelper.findReportByName("PAYMENT_ROLE_PERSONAL"); 
+			JasperReport jReport = JasperCompileManager.compileReport(report.getJrxml());
+			addSubReports(jReport, parameters);
+			log.info("######## PARAMETERS: " + parameters.toString());
+			JasperPrint jprint = null;
+			Connection con = null;
+			try {
+				con = DataSourceConnectionProvider.getByComponent(getView().getModelName()).getConnection();
+				con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED); // To avoid freezing the application with some reports in some databases
+				if (!Is.emptyString(XPersistence.getDefaultSchema())) {
+					con.setCatalog(XPersistence.getDefaultSchema());
+				}
+				jprint = JasperFillManager.fillReport(jReport, parameters, con);
+			} finally {
+				con.close();
+			}
+			
+			byte[] documentPDF = JasperExportManager.exportReportToPdf(jprint);
+			List<String> toRecipients = new ArrayList<String>();
+			toRecipients.add(account.getPerson().getEmail());
+			List<String> ccRecipients = new ArrayList<String>();
+						
+			Attachment attachmentPDF = new Attachment(account.getName(), documentPDF, "application/pdf", "pdf"); 
+			
+			emailService = new EmailSenderService();
+			Properties properties = emailService.getDefaultProperties();
+			properties.remove("mail.smtp.mail.sender");
+			properties.remove("mail.smtp.password");
+			properties.remove("mail.smtp.user");
+			
+			properties.put("mail.smtp.mail.sender", ParameterHelper.getValue("payroll.mail.smtp.mail.sender"));
+			properties.put("mail.smtp.password", ParameterHelper.getValue("payroll.mail.smtp.password"));
+			properties.put("mail.smtp.user", ParameterHelper.getValue("payroll.mail.smtp.user"));
+				
+			emailService = new EmailSenderService(properties,
+					toRecipients,
+					ccRecipients,
+					company.getPerson().getName()+" - ROL DE PAGOS",
+					getBodyContent(company.getPerson().getName(), account.getName().toUpperCase(), account.getCode()),
+					attachmentPDF
+					);
+			addMessage("email_payroll_sended", employeeContractDetail.getEmployeeContract().getEmployeeContractId());
+			emailService.sendEmail();
+		}
+		else
+		{
+			addError("error_send_payroll");
+		}
+		}
+		if(employeeContract == null ) {
+			addMessage("no_exist_payroll_generate");	
+		}
+		getView().refresh();
+	}
+	 
+	// method validate to email 
+	private void validate(Account account) throws Exception {
+		Pattern pattern = Pattern.compile(
+				"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@" + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
+		EmployeeContract employeeContractId = XPersistence.getManager().find(EmployeeContract.class,account.getAccountId());
+		if (employeeContractId.getPerson().getEmail() == null || employeeContractId.getPerson().getEmail().isEmpty()) {
+			throw new OperativeException("employee_does_not_have_an_email",employeeContractId.getEmployeeContractId()); 
+		} else {
+			Matcher mather = pattern.matcher(account.getPerson().getEmail());
+			if (mather.find() != true) {
+				throw new OperativeException("employee_does_not_have_a_valid_email",employeeContractId.getEmployeeContractId());
+			}
+		}
+	}
+
+	private String getBodyContent(String companyName, String customerName, String invoiceCode)
+	{
+		return new StringBuilder().append("Estimado Empleado ")
+				.append(customerName)
+				.append("<br>")
+				.append("Reciba un cordial saludo de quienes hacemos ")
+				.append(companyName)
+				.append(". Nos complace informale que su Rol de Pago ha sido generado")
+				.append("<br><br>")
+				.toString();
+	}
+	
+	//get subreports for report root
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void addSubReports(JasperReport jReport, Map parameters) throws Exception{
+		JRParameter[] parameter=jReport.getParameters();
+		for(int j=0;j<parameter.length;j++){
+			if(parameter[j].getDescription()!=null && parameter[j].getDescription().toUpperCase().equals("SUBREPORT")){				
+				ReportDTO dto = ReportHelper.findReportByName(parameter[j].getName().toUpperCase());
+				JasperReport jsubReport = JasperCompileManager.compileReport(dto.getJrxml());
+				addSubReports(jsubReport, parameters);
+				parameters.put(parameter[j].getName().toUpperCase(), jsubReport);
+			}
+		}
+	}
+}

@@ -1,0 +1,198 @@
+package com.powerfin.model;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import org.hibernate.annotations.GenericGenerator;
+import org.openxava.annotations.DescriptionsList;
+import org.openxava.annotations.Hidden;
+import org.openxava.annotations.ListProperties;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.PreCreate;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.ReferenceView;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.Tab;
+import org.openxava.annotations.View;
+
+import com.powerfin.helper.AccountHelper;
+import com.powerfin.helper.AccountStatusHelper;
+import com.powerfin.helper.CompanyHelper;
+import com.powerfin.model.superclass.CompleteAuditEntity;
+import com.powerfin.util.UtilApp;
+
+/**
+ * The persistent class for the payroll vacation database table.
+ * @author Luis Ramón
+ */
+@Entity
+@Table(name = "payroll_vacation")
+@View(name = "PayrollVacation", members = "payrollVacationType; employeeContract; fromDate; toDate; daysVacation; monetaryValue; remark; accountStatus")  //name = "PayrollVacation",
+@Tab(name = "TabPayrollVacation", properties = "payrollVacationType.name, employeeContract.person.name, employeeContract.person.identification, fromDate, toDate, daysVacation, monetaryValue, accountStatus.name, remark")//
+public class PayrollVacation extends CompleteAuditEntity implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@Column(name = "payroll_vacation_id", unique = true, nullable = false, length = 32)
+	@GeneratedValue(generator = "system-uuid")
+	@GenericGenerator(name = "system-uuid", strategy = "uuid")
+	@Hidden
+	@ReadOnly
+	private String payrollVacationId;
+
+	@ManyToOne
+	@JoinColumn(name = "payroll_vacation_type_id")
+	@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	@Required
+	private PayrollVacationType payrollVacationType;
+	
+	@ManyToOne
+	@JoinColumn(name = "employee_contract_id", nullable = false)
+	@ReferenceView("DetailContractEmployee") //DetailContractEmployee
+	//@ListProperties("person.nane")
+	@NoCreate
+	@NoModify
+	@Required
+	private EmployeeContract employeeContract;
+	
+	@Temporal(TemporalType.DATE)
+	@Required
+	@Column(name="from_date", unique=true, nullable=false)
+	private Date fromDate;  
+	
+	@Temporal(TemporalType.DATE)
+	@Required
+	@Column(name="to_date", unique=true, nullable=false)
+	private Date toDate;
+
+	@Column(name = "days_vacation")
+	@ReadOnly
+	private Integer daysVacation;
+
+	@Column(name = "monetary_value")
+	@ReadOnly
+	private BigDecimal monetaryValue;
+	
+	@Column(length = 100)
+	private String remark;
+
+	@ManyToOne
+	@JoinColumn(name = "account_status_id")
+	@DescriptionsList(descriptionProperties = "name")
+	@NoCreate
+	@NoModify
+	@Required
+	private AccountStatus accountStatus;
+
+	public String getPayrollVacationId() {
+		return payrollVacationId;
+	}
+
+	public void setPayrollVacationId(String payrollVacationId) {
+		this.payrollVacationId = payrollVacationId;
+	}
+
+	public PayrollVacationType getPayrollVacationType() {
+		return payrollVacationType;
+	}
+
+	public void setPayrollVacationType(PayrollVacationType payrollVacationType) {
+		this.payrollVacationType = payrollVacationType;
+	}
+
+	public EmployeeContract getEmployeeContract() {
+		return employeeContract;
+	}
+
+	public void setEmployeeContract(EmployeeContract employeeContract) {
+		this.employeeContract = employeeContract;
+	}
+
+	public Date getFromDate() {
+		return fromDate;
+	}
+
+	public void setFromDate(Date fromDate) {
+		this.fromDate = fromDate;
+	}
+
+	public Date getToDate() {
+		return toDate;
+	}
+
+	public void setToDate(Date toDate) {
+		this.toDate = toDate;
+	}
+
+	public Integer getDaysVacation() {
+		return daysVacation;
+	}
+
+	public void setDaysVacation(Integer daysVacation) {
+		this.daysVacation = daysVacation;
+	}
+
+	public BigDecimal getMonetaryValue() {
+		return monetaryValue;
+	}
+
+	public void setMonetaryValue(BigDecimal monetaryValue) {
+		this.monetaryValue = monetaryValue;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+	public AccountStatus getAccountStatus() {
+		return accountStatus;
+	}
+
+	public void setAccountStatus(AccountStatus accountStatus) {
+		this.accountStatus = accountStatus;
+	}
+	
+//	@PreCreate
+//	public void onPersist() throws Exception {
+//		daysVacation = calculateDaysVacation(); //.intValue()
+//	}
+//	
+//	@PreUpdate
+//	public void onUpdate()
+//	{
+//		daysVacation = calculateDaysVacation();
+//
+//	}
+//	
+//	public int calculateDaysVacation() {
+//		if(getFromDate()!=null || getToDate()!=null) {
+// 
+//			@SuppressWarnings("deprecation")
+//			int dias=(int) ((toDate.getDate()-fromDate.getDate()));
+//			
+//		return dias;
+//		}
+//		return daysVacation;
+//	}
+	
+}
