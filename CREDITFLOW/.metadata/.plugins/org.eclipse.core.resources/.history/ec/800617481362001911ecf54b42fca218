@@ -1,0 +1,80 @@
+package com.creditflow.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import org.openxava.annotations.DisplaySize;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.ReferenceView;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.Stereotype;
+import org.openxava.annotations.View;
+
+@Entity
+@Table(name = "item")
+@View (members= "itemId;name;remark")
+public class Item implements Serializable{
+	private static final long serialVersionUID = 1L;
+	@Id
+	@Column(name = "item_id", unique = true, length = 20)
+	@Required
+	private String itemId;
+	
+	@Column(length=100)
+	@Required
+	private String name;
+	
+	@Column(length=100)
+	private String remark;
+	
+//	//relacion con tabla applicationItem
+//	@ManyToOne
+//	@JoinColumn(name="application_item_id")
+//	@NoCreate
+//	@NoModify
+//	@Required
+//	@ReferenceView("Reference")
+//	private ApplicationItem applicationItem;
+	
+	
+	//creacion de getters y setters**********************************************
+
+	public String getItemId() {
+		return itemId;
+	}
+
+	public void setItemId(String itemId) {
+		this.itemId = itemId;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+
+	
+	
+	
+}

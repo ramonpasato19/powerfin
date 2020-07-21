@@ -1,0 +1,225 @@
+package com.creditflow.helper;
+
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+
+import org.openxava.jpa.*;
+import org.openxava.util.Users;
+
+import com.creditflow.model.*;
+import com.openxava.naviox.model.User;
+import com.sun.org.apache.xpath.internal.operations.Equals;
+
+public class Helper {
+		
+	public static Company getDefaultCompany(){
+		return XPersistence.getManager().find(Company.class, 999);
+	}
+	public static Company getCompanyBus(){
+		return XPersistence.getManager().find(Company.class, 2);
+	}
+	public static Insurer getDefaultInsurer(){
+		return XPersistence.getManager().find(Insurer.class, "999");
+	}
+	public static Parameter getParameter(String code){
+		return XPersistence.getManager().find(Parameter.class, code);
+	}
+	public static Dealer getDealer(String code){
+		return XPersistence.getManager().find(Dealer.class, code);
+	}
+	
+	public static QuotationRequirementsStatus getQuotationRequirementsStatus(String code){
+		return XPersistence.getManager().find(QuotationRequirementsStatus.class, code);
+	}
+	public static ApplicationRequirementsStatus getApplicationRequirementsStatus(String code){
+		return XPersistence.getManager().find(ApplicationRequirementsStatus.class, code);
+	}
+
+	public static QuotationStatus getDefaultStatusQuotation(String code){
+		return XPersistence.getManager().find(QuotationStatus.class, code);
+	}
+	public static ApplicationStatus getDefaultStatusApplication(String code){
+		return XPersistence.getManager().find(ApplicationStatus.class, code);
+	}
+	public static Property getProperty(String code) {
+		return XPersistence.getManager().find(Property.class, code);
+	}
+	
+	public static Property getProperties(String organization,String keyId){
+		Property p = XPersistence.getManager().find(Property.class, keyId);
+		return p;
+//		String sql = "select distinct p FROM com.creditflow.model.Property p where p.keyId =:PKEYID";
+//		Query query = XPersistence.getManager().createQuery(sql);
+//		query.setParameter("PKEYID", keyId);
+//		Property properties = null;
+//
+//		try {
+//			properties = (Property) query.getSingleResult();
+//			return properties;			
+//		} catch (Exception e) {			
+//			e.printStackTrace();			
+//		}
+//		return null;
+	}
+	/**
+	 * Método que se encarga de recuperar la depreciación vigente
+	 * de acuerdo al tipo de vehiculo
+	 * @param vehicleType
+	 * @return
+	 */
+	public static Depreciation getCurrentActiveDepretiation(Depreciation.VehicleType vehicleType, Depreciation.StatusDepreciation statusDepreciation, Insurer insurer){
+		try {
+			String sql = "select distinct d from com.creditflow.model.Depreciation d where d.vehicleType=:PVEHICLE_TYPE and d.statusDepreciation = :PSTATUS_DEPRECIATION and d.insurer = :PINSURER";
+			Query query = XPersistence.getManager().createQuery(sql);
+			query.setParameter("PVEHICLE_TYPE", vehicleType);
+			query.setParameter("PSTATUS_DEPRECIATION", statusDepreciation);
+			query.setParameter("PINSURER", insurer);
+			query.setMaxResults(1);
+			Depreciation depreciation = (Depreciation) query.getSingleResult();
+			return depreciation;			
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	/**
+	 * Método que se encarga de recuperar los Destinatarios, 
+	 * a los cuales se va a Notificar
+	 * @return
+	 */
+	public static List<RecipientsMailNotificationQuotation> getRecipients(Quotation quotation, QuotationStatus quotationStatus){
+		List<RecipientsMailNotificationQuotation> recipients = null;
+		if (quotation.getQuotationId()!= null){
+			Quotation oldQuotatation = XPersistence.getManager().find(Quotation.class, quotation.getQuotationId());
+			/*
+			 * En el caso de que no se cambie el estado 
+			 * no se debe emitir notificación
+			 * Unicamente guardar
+			 */
+			
+			if (oldQuotatation.getQuotationStatus().equals(quotationStatus)){
+				return null;
+			}
+			String sql ="select distinct r from  com.creditflow.model.RecipientsMailNotificationQuotation r left join fetch r.user u left join r.quotationStatus s where r.notifyStatus = :PNOTIFYSTATUS and s  = :PSTATUS";
+			Query query = XPersistence.getManager().createQuery(sql);
+			query.setParameter("PNOTIFYSTATUS", RecipientsMailNotificationQuotation.NotifyStatus.SI);
+			query.setParameter("PSTATUS", quotationStatus);
+			try {
+				recipients = query.getResultList();				
+				if (recipients!=null && !recipients.isEmpty()){
+					RecipientsMailNotificationQuotation currentUserRecipients = getRecipientCurrentUser();
+					if (currentUserRecipients!=null){
+						recipients.add(currentUserRecipients);						
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return recipients;
+	}
+	/**
+	 * Método que se encarga de recuperar el destinatario correspondiente al 
+	 * usuario que actualmente se encuestra en el sistema
+	 * @return
+	 */
+	private static RecipientsMailNotificationQuotation getRecipientCurrentUser(){
+		RecipientsMailNotificationQuotation recipient = new RecipientsMailNotificationQuotation();
+		User currentUser = XPersistence.getManager().find(User.class, Users.getCurrent());
+		recipient.setUser(currentUser);
+		QuotationStatus quotationStatus = getDefaultStatusQuotation("PEN");
+		recipient.setQuotationStatus(quotationStatus);
+		return recipient;
+	}
+	
+	
+	public static IdentificationType getDefaultIdentificationType (String code){
+		return XPersistence.getManager().find(IdentificationType.class, code);
+	}
+	
+	/**
+	 * Metodo que se encarga de recuperar el dispositvo de acuerdo a la marca y el periodo del 
+	 * plazo del credito
+	 * @param period
+	 * @param mark
+	 * @return
+	 */
+	public static GpsDevice getGpsDeviceByPerioidMark(Period period,String mark){
+		String sql = "select distinct d from com.creditflow.model.GpsDevice d where d.month=:PMONTHS and d.mark = :PMARK ";
+//		String sql = "select distinct d from com.creditflow.model.GpsDevice d where d.month=:PMONTHS ";
+		Query query = XPersistence.getManager().createQuery(sql);
+		query.setParameter("PMONTHS", period.getPeriodId());
+		query.setParameter("PMARK", mark);
+		query.setMaxResults(1);
+		GpsDevice gpsDevice = (GpsDevice) query.getSingleResult();
+		return  gpsDevice;
+	}
+	
+	
+	/**
+	 * Método que se encarga de recuperar el numero  de póliza maestro 
+	 * de acuerdo al tipo de vehiculo
+	 * @param vehicleType
+	 * @return
+	 */
+	public static MasterNumberPolicy getCurrentActiveMasterNumberPolicy( MasterNumberPolicy.StatusMasterNumberPolicy statusMasterNumberPolicy, Insurer insurer){
+		try {
+			String sql = "select distinct m from com.creditflow.model.MasterNumberPolicy m where m.statusMasterNumberPolicy = :PSTATUS_STATUS_MASTER_NUMBER_POLICY and m.insurer = :PINSURER";
+			Query query = XPersistence.getManager().createQuery(sql);
+			
+			query.setParameter("PSTATUS_STATUS_MASTER_NUMBER_POLICY", statusMasterNumberPolicy);
+			query.setParameter("PINSURER", insurer);
+			query.setMaxResults(1);
+			MasterNumberPolicy masterNumberPolicy = (MasterNumberPolicy) query.getSingleResult();
+			return masterNumberPolicy;			
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * Método que se encarga de recuperar el oficial de credito en base 
+	 * al usuario que está conectado actualmente
+	 * @return Retorna el Oficial de Credito.  
+	 */
+	public static CreditOfficer getCreditOfficerByCurrentUser(String currentUser ){
+		try {
+			String sql = "select distinct c from com.creditflow.model.CreditOfficer c where c.user.name = :PCREDITOFFICER";
+			Query query = XPersistence.getManager().createQuery(sql);
+			
+			query.setParameter("PCREDITOFFICER", currentUser);			
+			query.setMaxResults(1);
+			CreditOfficer creditOfficer = (CreditOfficer) query.getSingleResult();
+			return creditOfficer;			
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	
+	public static Date getLastDateFromApplicationQuota(Application application) {
+		Query query = XPersistence.getManager().createQuery("select  distinct aq from  com.creditflow.model.ApplicationQuota aq where aq.application = :PAPPLICATION_ID order by aq.dueDate desc");
+		query.setParameter("PAPPLICATION_ID", application);
+		query.setFirstResult(0);
+		query.setMaxResults(1);
+		ApplicationQuota applicationQuota ;
+		try {
+			applicationQuota = (ApplicationQuota) query.getSingleResult();
+			return applicationQuota.getDueDate();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return null;
+	}
+	
+	public static Rate getDefaultRate(String code) {
+		return XPersistence.getManager().find(Rate.class, code);
+	}
+	
+	
+}

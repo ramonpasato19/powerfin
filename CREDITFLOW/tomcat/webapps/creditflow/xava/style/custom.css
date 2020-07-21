@@ -1,0 +1,14 @@
+/*
+Put here your own style
+*/
+body {
+   font-size: 9px;
+}
+.ox-list-pair, .ox-list-odd {
+   height: 20px;
+}
+.ox-messages-wrapper, .ox-errors-wrapper {
+	position: absolute;
+	top: 32px;
+	z-index: 9999999;
+}

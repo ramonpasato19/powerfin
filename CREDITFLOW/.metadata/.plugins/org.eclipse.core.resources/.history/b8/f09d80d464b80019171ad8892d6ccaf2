@@ -1,0 +1,3564 @@
+package com.creditflow.model;
+
+import java.io.*;
+import java.math.*;
+import java.util.*;
+
+import javax.persistence.*;
+import javax.validation.constraints.*;
+
+import org.openxava.annotations.*;
+import org.openxava.jpa.*;
+
+import com.creditflow.calculators.*;
+import com.creditflow.calculators.application.*;
+import com.creditflow.calculators.quotation.ChangeControlsForQuotationType;
+import com.creditflow.model.Quotation.InsureType;
+import com.creditflow.model.Quotation.QuotationFinancedInsureFisrtYear;
+import com.creditflow.model.Quotation.QuotationType;
+import com.creditflow.model.Quotation.QuotationTypePerson;
+import com.creditflow.model.Quotation.YesOrNot;
+import com.creditflow.model.superclass.*;
+
+import jdk.nashorn.internal.ir.annotations.Reference;
+
+
+
+/**
+ * The persistent class for the application database table.
+ * 
+ */
+@Entity
+@Table(name="application")
+@Views({
+	
+	@View(name="NewLegalPerson", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"			
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtorLegalPerson[#debtorLegalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance, effectiveRate}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"			
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// NUEVOS SOLTEROS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	@View(name="NewSingle", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance, effectiveRate}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+
+	@View(name="NewSinglePeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson];"
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"						
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"			
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"			
+			+ "quotasPeru{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// NUEVOS CASADOS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////	
+	@View(name="NewMarried", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouse[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance, effectiveRate}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="NewMarriedPeru" , members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouse[#spouseNaturalPerson];"
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"			
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"			
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"			
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// NUEVOS UNION LIBRE
+	//////////////////////////////////////////////////////////////////////////////////////////////////////	
+	
+	@View(name="NewFreeUnion", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "cohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="NewFreeUnionPeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "cohabitant[#spouseNaturalPerson];"
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"			
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"			
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "quotasPeru{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// NUEVOS DIVORCIADOS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////	
+		
+	@View(name="NewDivorced", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="NewDivorcedPeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson];"
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"			
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"			
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"			
+			+ "quotasPeru{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+	
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// NUEVOS VIUDOS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@View(name="NewWidower", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="NewWidowerPeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson];"
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"			
+			+ "quotasPeru{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+	
+	////////////////////////////////////////////////////////////////////////////////
+	// NUEVOS RIESGOS 
+	////////////////////////////////////////////////////////////////////////////////
+	@View(name="NewSingleRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance, effectiveRate}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	@View(name="NewMarriedRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouse[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance, effectiveRate}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	@View(name="NewFreeUnionRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "cohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	@View(name="NewDivorcedRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	@View(name="NewWidowerRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer};"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor};"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	////////////////////////////////////////////////////////////////////////////////
+	
+	
+	@View(name="ToVerifying", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer[dealer];"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	@View(name="ToApprove", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate , contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer[dealer];"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	@View(name="ToAppeal", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer[dealer];"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"),
+	@View(name="ToBill", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"),
+	@View(name="ToEmit", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate, cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleModel;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleRamvCpn;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	
+	@View(name="ToLegal", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate, cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleModel;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleRamvCpn;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	
+	@View(name="ToDisburse", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate, cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleModel;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleRamvCpn;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	
+	
+	@View(name="ToEmitRestructured", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate, cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleRamvCpn;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="ToEmitInsurances", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//  Vista para emitir los contratos de  personas Naturales Solteros, Viudos, Divorciados
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@View(name="ToEmitPeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate, contractNumber];"			
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson];"			
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"
+			+ "}"
+			+ "externalPerson{"
+//			+ "dealer{dealer}"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"			
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColour;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance, legalExpenses;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"			
+			+ "quotasPeru{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+	
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//  Vista para emitir los contratos de  personas Naturales Casadas, o Union Libre
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@View(name="ToEmitMarriedPeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate, contractNumber];"			
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson];"
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"			
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColour;"			
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"			
+			+ "quotasPeru{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+	
+	@View(name="ViewToEmitLegalPerson", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtorLegalPerson[#debtorLegalPerson;signatoryCompanyClients[signatoryCompanyClients]]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "			
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="ViewToEmitLegalPersonPeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,applicationTypePortfolio;"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtorLegalPerson[#debtorLegalPerson;signatoryCompanyClients[signatoryCompanyClients]];"
+			+ "codebtors{#applicationCoDebtorPersons}, guarantors{#applicationPersons}"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"			
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColour;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "useGas, gasValue;"
+			+ "percentageCreditResearch, valueCreditResearch;"
+			+ "quotaMonthInsure, quotaMonthMortgage;"
+			+ "legalExpensesNotaries;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"			
+			+ "quotasPeru{applicationQuotas; summationTotalDividend; summationTotalQuota;summationTotalInsurer;summationTotalMortgageInsurer}"),
+	
+	@View(name="ViewToEmitLegalPersonRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtorLegalPerson[#debtorLegalPerson;signatoryCompanyClients[signatoryCompanyClients]]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleModel;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="ToEmitRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"			
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller; commissionValue; bossCommissionValue}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	
+	@View(name="ToEmitBus", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "bodywork [bodyworkModel;bodyworkHomologation;bodyworkPrimaryColor;bodyworkSecondaryColor;bodyworkCooperative;bodyworkDisk]"			
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="ToEmitBusRisk", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller; commissionValue; bossCommissionValue}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "bodywork [bodyworkModel;bodyworkHomologation;bodyworkPrimaryColor;bodyworkSecondaryColor;bodyworkCooperative;bodyworkDisk]"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+
+	@View(name="ToEmitBusInsuraces", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber;"
+			+ "signatoryCompany];"
+			+ "applicants{#"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "externalPerson{"
+			+ "dealer{dealer; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller{seller; commissionValue; bossCommissionValue}"
+			+ "mortgageInsurer{mortgageInsurer}"
+			+ "vehicleInsurer{vehicleInsurer}"
+			+ "creditOfficer{creditOfficer}"
+			+ "}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "bodywork [bodyworkModel;bodyworkHomologation;bodyworkPrimaryColor;bodyworkSecondaryColor;bodyworkCooperative;bodyworkDisk]"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="Denied", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate, billingDate, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer[dealer];"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "guarantors{applicationPersons}"),
+	
+	@View(name="Emitted", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer[dealer; signatoryDealers];"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehicleUse, vehicleYear;"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	@View(name="EmittedScanner", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehicleModel;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColourEntity;"
+			+ "vehicleUse, vehicleYear;"
+			+ "bodywork [bodyworkModel;bodyworkHomologation;bodyworkPrimaryColor;bodyworkSecondaryColor;bodyworkCooperative;bodyworkDisk]"
+			+ "}"
+			+ "financing{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	
+	@View(name="EmittedScannerPeru", members="generalInformation[#"
+			+ "applicationId; "
+			+ "applicationType,"
+			+ "applicationStatus, office, currency;"
+			+ "applicationDate, disbursementDate, paymentDate; billingDate,cityPlacement, contractNumber];"
+			+ "applicants{#"
+			+ "debtor[#debtorNaturalPerson],"
+			+ "spouseCohabitant[#spouseNaturalPerson]"
+			+ "}"
+			+ "dealerAndSeller{"
+			+ "dealer{dealer;dealerBranchOffice; signatoryDealers ;  signatoryOfficeManager}"
+			+ "seller[seller]}"
+			+ "vehicleInformation{#"
+			+ "vehicleMark;"
+			+ "vehicleModelName;"
+			+ "vehiclePlateNumber;"
+			+ "vehicleMotorNumber;"
+			+ "vehicleChassisNumber;"
+			+ "vehicleClass;"
+			+ "vehicleType;"
+			+ "vehicleColour;"
+			+ "vehicleUse, vehicleYear;"			
+			+ "}"
+			+ "financingPeru{#"
+			+ "vehicleValue,insuranceEndorsement;"
+			+ "entranceValue, entrancePercentage;"
+			+ "gpsDevice, gpsDeviceAmount;"
+			+ "period, rate; "
+			+ "insuranceFinanced, insure_type;"
+			+ "insuranceAmount, vehicleInsurance, insurancePeriod;"
+			+ "insuranceMortgageAmount, legalExpenses;"
+			+ "amountToFinance;}"
+			+ "remarks{observationsApplications}"
+			+ "documents{documents; requirementsDebtor}"
+			+ "guarantors{applicationPersons}"
+			+ "codebtors{applicationCoDebtorPersons}"
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	
+	
+	
+	@View(name="EmittedRegularize", members="generalInformation[#"
+			+ "applicationId; "			
+			+ "office,contractNumber;"
+			+ "applicationDate, disbursementDate, paymentDate];"		
+			+ "quotas{applicationQuotas; summationTotalDividend; summationTotalQuota}"),
+	@View(name="Reference", members="applicationId; contractNumber "),
+	
+	@View(name="InsurerDataSend", members=" applicationId; contractNumber ;"
+			+ "vehicleModel;"			
+			+ "vehicleInsurer[#vehicleInsurer],mortgageInsurer[#mortgageInsurer];"
+			+ "debtorNaturalPerson[#debtorNaturalPerson];debtorLegalPerson[#debtorLegalPerson]")		
+	
+	
+})
+@Tabs({ 
+	@Tab(properties="applicationId, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, period, rate "),
+	
+	//*****Tab legal person
+	@Tab(name="TabNewLegalPerson", properties="applicationId, contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.legalPerson.personId} = debtor_person_id and ${debtorPerson.personType} = 'JUR' and  ${spousePerson} is null and  application_type = '0'",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitLegalPerson", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.legalPerson.personId} = debtor_person_id  and ${debtorPerson.personType} = 'JUR' and  ${spousePerson} is null and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	
+	@Tab(name="ToEmitLegalPersonPeru", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.legalPerson.personId} = debtor_person_id  and ${debtorPerson.personType} = 'JUR' and  ${spousePerson} is null and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//TAB SOLTEROS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	@Tab(name="TabNewSingle", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ",
+		baseCondition = "application_status_id = 'PEN' and ${spousePerson} is null and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001' ",
+		defaultOrder= "${applicationId} desc"),//	
+	
+	@Tab(name="TabNewSinglePeru", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ",
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001' ",
+		defaultOrder= "${applicationId} desc"),//
+	
+	
+	@Tab(name="ToEmitSingle", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${spousePerson} is null and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitSingleBus", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),	
+	@Tab(name="TabNewSingleRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ",
+		baseCondition = "application_status_id = 'PEN' and ${spousePerson} is null and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitSingleRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${spousePerson} is null and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitSingleBusRisk", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${spousePerson} is null and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001' and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitSingleInsurances", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${spousePerson} is null and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitSingleBusInsurances", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${spousePerson} is null and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001' and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+
+
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//TAB CASADOS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@Tab(name="TabNewMarried", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002' ",
+		defaultOrder= "${applicationId} desc"),	
+	@Tab(name="TabNewMarriedRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitMarried", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitMarriedBus", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitMarriedRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitMarriedBusRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitMarriedInsurances", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitMarriedBusInsurances", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, debtorPerson.naturalPerson.separationProperties, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//TAB UNION LIBRE
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@Tab(name="TabNewFreeUnion", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="TabNewFreeUnionPeru", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="TabNewFreeUnionRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitFreeUnion", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitFreeUnionPeru", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),	
+	@Tab(name="ToEmitFreeUnionBus", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitFreeUnionRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitFreeUnionBusRisk", properties="applicationId,  contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitFreeUnionInsurances", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitFreeUnionBusInsurances", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	
+	
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//TAB UNION LIBRE
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	@Tab(name="TabNewDivorced", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="TabNewDivorcedRisk", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitDivorced", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitDivorcedBus", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitDivorcedRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitDivorcedBusRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitDivorcedInsurances", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitDivorcedBusInsurances", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//TAB VIUDOS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@Tab(name="TabNewWidower", properties="applicationId,   contractNumber,applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="TabNewWidowerPeru", properties="applicationId, contractNumber,  applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ",
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004' ",
+		defaultOrder= "${applicationId} desc"),//
+	@Tab(name="TabNewWidowerRisk", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'PEN' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitWidower", properties="applicationId,   contractNumber,applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitWidowerBus", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitWidowerRisk", properties="applicationId,   contractNumber,applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitWidowerBusRisk", properties="applicationId,   contractNumber,applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitWidowerInsurances", properties="applicationId,   contractNumber,applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004'  and  application_type = '0' ",
+		defaultOrder= "${applicationId} desc"),
+	@Tab(name="ToEmitWidowerBusInsurances", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'BIL' and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004'  and  application_type = '1' ",
+		defaultOrder= "${applicationId} desc"),
+	
+	@Tab(name="Emitted", properties="applicationId,   contractNumber,applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id = 'EMI' ",defaultOrder= "${applicationId} desc"),	
+	@Tab(name="ToEmitGeneral", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name,spousePerson.name,  amountToFinance, vehicleModelName, frecuency.name, rate, insurer.insurerId, mortgageInsurer.insurerId ", 
+		baseCondition = "application_status_id IN ('BIL', 'LEG', 'EMI','DES') ",defaultOrder= "${applicationId} desc"),	
+	@Tab(name="ToEmitRegularize", properties="applicationId,   contractNumber,applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id IN ('BIL', 'LEG', 'EMI', 'DES') ",defaultOrder= "${applicationId} desc"),
+	@Tab(name="TabToEmitRestructured", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id IN ('BIL', 'PEN') and  restructured=true ",defaultOrder= "${applicationId} desc"),
+	
+	
+	@Tab(name="TabToLegal", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name,spousePerson.name,  amountToFinance, vehicleModelName, frecuency.name, rate, insurer.insurerId, mortgageInsurer.insurerId ", 
+		baseCondition = "application_status_id IN ('LEG','BIL') ",defaultOrder= "${applicationId} desc"),
+	
+	
+	
+	@Tab(name="TabToDisburse", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name,spousePerson.name,  amountToFinance, vehicleModelName, frecuency.name, rate, insurer.insurerId, mortgageInsurer.insurerId ", 
+		baseCondition = "application_status_id IN ('LEG', 'DES') ",defaultOrder= "${applicationId} desc"),
+	
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Tabulaciones para Emisión de Contratos   Peru
+	/////////////////////////////////////////////////////////////////////////////////////
+	
+	@Tab(name="TabEmitSinglePeru", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id IN ('BIL') and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '001' ",defaultOrder= "${applicationId} desc"),
+	
+	@Tab(name="TabEmitMarriedPeru", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id IN ('BIL') and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '002' ",defaultOrder= "${applicationId} desc"),
+		
+	@Tab(name="TabEmitDivorcedPeru", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id IN ('BIL') and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '003' ",defaultOrder= "${applicationId} desc"),
+	
+	@Tab(name="TabEmitWidowerPeru", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id IN ('BIL') and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '004' ",defaultOrder= "${applicationId} desc"),
+	
+	@Tab(name="TabEmitFreeUnionPeru", properties="applicationId,  contractNumber, applicationStatus.applicationStatusId, debtorPerson.name, amountToFinance, vehicleModelName, frecuency.name, rate ", 
+		baseCondition = "application_status_id IN ('BIL') and ${debtorPerson.naturalPerson.maritalStatus.maritalStatusId} = '005' ",defaultOrder= "${applicationId} desc"),
+	
+
+	
+	
+	
+	
+	
+})
+public class Application extends AuditEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	public enum YesOrNot { YES, NO };
+
+	@Id
+	@Column(name="application_id", unique=true, nullable=false)
+    @GeneratedValue(strategy=GenerationType.TABLE, generator = "APPLICATIONID")
+    @TableGenerator(name="APPLICATIONID", table="id_gen", 
+        pkColumnName="ID_NAME", valueColumnName="ID_VAL", 
+        pkColumnValue="APPLICATIONID", allocationSize=1, initialValue=100001)
+	@ReadOnly(notForViews = "Reference")
+	private Integer applicationId;
+	
+	@Column(name = "vehicle_model_name", length= 100, nullable = true)
+    @Required
+    @DisplaySize(50)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse ")
+    private String vehicleModelName;
+	
+	@Column(name = "legal_representative", length= 100, nullable = true)
+    @DisplaySize(50)
+	@Hidden
+    private String legalRepresentative;
+	
+	@Column(name = "position_representative", length= 100, nullable = true)
+	@DisplaySize(50)
+	@ReadOnly
+    private String positionRepresentative;
+	
+	@Column(name = "vehicle_plate_number", length= 50, nullable = true)
+    @DisplaySize(30)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize,EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+    private String vehiclePlateNumber;
+	
+	@Column(name = "vehicle_motor_number", length= 50, nullable = true)
+    @DisplaySize(30)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize,EmittedScanner, EmittedScannerPeru,ToLegal, ToDisburse")
+    private String vehicleMotorNumber;
+	
+	@Column(name = "vehicle_chassis_number", length= 50, nullable = true)
+    @DisplaySize(30)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize,EmittedScanner,EmittedScannerPeru,ToLegal, ToDisburse")
+    private String vehicleChassisNumber;
+	
+	@Column(name = "vehicle_colour", length= 50, nullable = true)
+    @DisplaySize(30)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+    private String vehicleColour;
+	
+	@Column(name = "vehicle_class", length= 50, nullable = true)
+    @DisplaySize(30)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+    private String vehicleClass;
+	
+	@Column(name = "vehicle_type", length= 50, nullable = true)
+    @DisplaySize(30)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+    private String vehicleType;
+	
+	@Required
+	@Column(name = "contract_number", length= 30, nullable = true, unique=true)
+    @DisplaySize(15)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, ToLegal, ToDisburse" , notForViews="Reference")
+    private String contractNumber;
+	
+	@Column(name="actual_quota_system", precision=11, scale=2)
+	private BigDecimal actualQuotaSystem;
+
+	@Column(name="additional_fee", precision=11, scale=2)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, ToLegal, ToDisburse")
+	private BigDecimal additionalFee;
+
+	@Column(name="amount_to_finance", precision=11, scale=2)
+	@Required
+	@ReadOnly
+	private BigDecimal amountToFinance;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="application_date")
+	@ReadOnly
+	private Date applicationDate;
+
+	@Temporal(TemporalType.DATE)
+	@Column(name="disbursement_date")
+	@Required
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmit, ToEmitRestructured, ToEmitRisk, ToEmitBus, ToEmitBusRisk, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private Date disbursementDate;
+	
+	@Column(name="credit_bureau_rating")
+	private Integer creditBureauRating;
+
+	@Column(name="current_debt", precision=11, scale=2)
+	private BigDecimal currentDebt;
+
+	@Column(name="entrance_value", precision=11, scale=2)
+	@OnChange(CalculateAmountToFinance.class)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private BigDecimal entranceValue;
+
+	@Column(name = "entrance_percentage", precision=5, scale=2, nullable = true)
+    @OnChange(CalculateAmountToFinance.class)
+	@ReadOnly
+    private java.math.BigDecimal entrancePercentage;
+	
+	@Column(name="gps_device_amount", precision=11, scale=2)
+	@OnChange(CalculateAmountToFinance.class)
+	@ReadOnly
+	private BigDecimal gpsDeviceAmount;
+
+	@Column(name="insurance_amount", precision=11, scale=2)
+	@OnChange(CalculateAmountToFinance.class)
+	@ReadOnly
+	private BigDecimal insuranceAmount;
+	
+	@Column(name = "insurance_financed")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@OnChange(ChangeForInsuranceFinanced.class)
+	private YesOrNot insuranceFinanced;
+
+	@Column(name="insurance_endorsement")
+	@Required
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private YesOrNot insuranceEndorsement;
+
+	@Column(name="insurance_mortgage_amount", precision=11, scale=2)
+	@ReadOnly
+	private BigDecimal insuranceMortgageAmount;
+
+	@Temporal(TemporalType.DATE)
+	@Column(name="payment_date")
+	@Required
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private Date paymentDate;
+
+	@Temporal(TemporalType.DATE)
+	@Column(name="issue_date")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private Date issueDate;
+	
+	@Column(nullable=true, precision=5, scale=2)
+	@Required
+	@Digits(integer=3, fraction=2)
+	@ReadOnly
+	private BigDecimal rate;
+	
+	@Column(name="registration_fee", precision=11, scale=2)
+	@OnChange(CalculateAmountToFinance.class)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private BigDecimal registrationFee;
+
+	@Column(name="vehicle_value", precision=11, scale=2)
+	@Required
+	@OnChange(CalculateAmountToFinance.class)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner, EmittedScannerPeru,ToLegal, ToDisburse")
+	private BigDecimal vehicleValue;
+	
+	@Stereotype("FILES")
+	@Column(length=32)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied,  ToEmitInsurances, EmittedRegularize")
+	private String documents;
+	
+	@Stereotype("HTML_TEXT")
+	@Column(length=4000)
+	@Hidden// Se oculta ya que de ahora en  adelante se tendra un listado de obserrvaciones
+	private String remarks;
+
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name = "vehicle_year_id", nullable = true)
+	@DescriptionsList(descriptionProperties = "name", order = "name")
+	@NoCreate
+	@NoModify
+	@Required
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private VehicleYear vehicleYear;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name = "vehicle_use_id", nullable = true)
+	@DescriptionsList(descriptionProperties = "name", order = "name")
+	@NoCreate
+	@NoModify
+	@Required
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@OnChange(CalculateAmountToFinance.class)
+	private VehicleUse vehicleUse;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="gps_device_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@NoFrame
+	@DescriptionsList(descriptionProperties="name",condition= "${gpsStatus}=1" )
+    @OnChange(CalculateAmountToFinance.class)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private GpsDevice gpsDevice;
+	
+	//bi-directional many-to-one association to City
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="office_id", nullable=true)
+	@DescriptionsList(descriptionProperties="name")
+	@NoCreate
+	@NoModify
+	@Required
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@OnChange(OnChangeOffice.class)
+	private Office office;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="period_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@Required
+	@NoFrame
+	@DescriptionsList(descriptionProperties="name")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+//	@OnChange(CalculateAmountToFinance.class)
+	private Period period;
+	
+	//bi-directional many-to-one association to Person
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="debtor_person_id", nullable=true)
+	private Person debtorPerson;
+	
+	//bi-directional many-to-one association to Person
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="spouse_person_id", nullable=true)
+	private Person spousePerson;
+	
+	//bi-directional many-to-one association to Person
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="frecuency_id", nullable=true)
+	@DescriptionsList
+	//@Required
+	@NoCreate
+	@NoModify
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private Frecuency frecuency;
+	
+	//bi-directional many-to-one association to Person
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="application_status_id", nullable=true)
+	@ReadOnly(forViews="Denied, Emitted, EmittedScanner,EmittedScannerPeru")
+	@NoFrame
+	@NoCreate
+	@NoModify
+	@Required
+	@ReferenceView(forViews="Denied, Emitted", value="OnlyRead")
+	@DescriptionsLists({
+		@DescriptionsList(forViews="NewLegalPerson,NewSingle,NewMarried,NewFreeUnion,NewDivorced, NewLegalPersonPeru,NewSinglePeru,NewMarriedPeru,NewFreeUnionPeru,NewDivorcedPeru", condition="${applicationStatusId} IN ('PEN','BIL') "),////Se listan solo las PEN
+		@DescriptionsList(forViews="ToVerifying", condition="${applicationStatusId} in ('PEN','SOL','VER') "),//Se listan solo las SOL
+		@DescriptionsList(forViews="ToApprove", condition="${applicationStatusId} in ('VER','SOL','APV','APL','DEN') "),//Se listan solo las VER
+		@DescriptionsList(forViews="ToAppeal", condition="${applicationStatusId} in ('APL','APV','DEN') "),//Se listan solo las APL
+		@DescriptionsList(forViews="ToBill", condition="${applicationStatusId} in ('APV','BIL') "),//Se listan solo las APV
+		@DescriptionsList(forViews="ToEmit", condition="${applicationStatusId} in ('BIL','EMI','PEN') "),//Se listan solo las BIL
+		@DescriptionsList(forViews="ToEmitBus", condition="${applicationStatusId} in ('BIL','EMI','PEN') "),//Se listan solo las BIL para Buses
+		@DescriptionsList(forViews="ToEmitRisk", condition="${applicationStatusId} in ('BIL','EMI','PEN') "),//Se listan solo las BIL para Buses
+		@DescriptionsList(forViews="ToEmitBusRisk", condition="${applicationStatusId} in ('BIL','EMI','PEN') "),//Se listan solo las BIL para Buses
+		@DescriptionsList(forViews="ViewToEmitLegalPerson", condition="${applicationStatusId} in ('BIL','EMI') "),//Se listan solo las EMI
+		@DescriptionsList(forViews="Denied", condition="${applicationStatusId} = 'DEN' "),//Se listan solo las DEN
+		@DescriptionsList(forViews="Emitted", condition="${applicationStatusId} = 'EMI' "),//Se listan solo las EMI
+		@DescriptionsList(forViews="ToEmitPeru", condition="${applicationStatusId} in ('BIL','EMI','PEN') "),//Se listan solo las BIL
+		@DescriptionsList(forViews="ToEmitMarriedPeru", condition="${applicationStatusId} in ('BIL','EMI','PEN') "),//Se listan solo las BIL
+		@DescriptionsList(forViews="ToLegal", condition="${applicationStatusId} in ('BIL','LEG') "),
+		@DescriptionsList(forViews="ToDisburse", condition="${applicationStatusId} in ('LEG','DES') ")
+		
+	})
+	private ApplicationStatus applicationStatus;
+
+	//bi-directional many-to-one association to Currency
+	@ManyToOne
+	@JoinColumn(name="currency_id", nullable=true)
+	@DescriptionsList(descriptionProperties="name")
+	@Required
+	@NoCreate
+	@NoModify
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private Currency currency;
+	
+	//bi-directional many-to-one association to ApplicationPerson
+	@Transient
+	@OneToMany(mappedBy="application",cascade=CascadeType.ALL)
+	@AsEmbedded
+	@ListProperties("person.identification, person.name, applicationRelationship.name, person.spousePerson.identification, person.spousePerson.name")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private List<ApplicationPerson> applicationPersons;
+
+	//bi-directional many-to-one association to Product
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="product_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@ReferenceView("Reference")
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private Product product;
+
+	//bi-directional many-to-one association to Dealer
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="dealer_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@Required
+	@NoFrame
+	@NoSearch(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied,  Emitted")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@ReferenceView("Reference")
+	private Dealer dealer;
+
+	//bi-directional many-to-one association to Seller
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="seller_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@Required
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@ReferenceView("Reference")
+	private Seller seller;
+
+	//bi-directional many-to-one association to Seller
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="credit_officer_id", nullable=true)
+	@NoCreate
+	@NoModify
+	//@Required
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@ReferenceView("Reference")
+	private CreditOfficer creditOfficer;
+	
+	//bi-directional many-to-one association to Seller
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="tracker_id", nullable=true)
+	@NoCreate
+	@NoModify	
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanne, ToLegal, ToDisburser")
+	@ReferenceView("Reference")
+	private Tracker tracker;
+	
+	//bi-directional many-to-one association to Seller
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="insurer_id", nullable=true)
+	@NoCreate
+	@NoModify
+	//@Required
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@ReferenceView("Reference")
+	private Insurer insurer;
+
+	//bi-directional many-to-one association to Seller
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="mortgage_insurer_id", nullable=true)
+	@NoCreate
+	@NoModify	
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	@ReferenceView("Reference")
+	private Insurer mortgageInsurer;
+	
+	//bi-directional many-to-one association to Seller
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="vehicle_insurer_id", nullable=true)
+	@NoCreate
+	@NoModify	
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner, EmittedScannerPeru,ToLegal, ToDisburse")
+	@ReferenceView("Reference")
+	private Insurer vehicleInsurer;
+	
+	//bi-directional many-to-one association to State
+  	@ManyToOne(fetch=FetchType.LAZY)
+  	@NoFrame
+  	@JoinColumn(name="vehicle_model_id", nullable=true)
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")  	
+	@ReferenceView("ReferenceApplicationSimple")
+  	private VehicleModel vehicleModel;
+	
+	//bi-directional many-to-one association to ApplicationQuota
+	@OneToMany(mappedBy="application",cascade=CascadeType.ALL)
+
+	@ListProperties("quotaNumber, dueDate, provisionDays, capitalReduced, capital, interest, totalDividend, insurance, insuranceMortgage, totalQuota")
+	@ReadOnly(notForViews= "ToEmitRestructured, EmittedRegularize, ToLegal, ToDisburse")
+	@ElementCollection
+	@SaveAction("ApplicationQuotaController.save")  	
+	@RemoveAction("ApplicationQuotaController.delete")	
+	private Collection<ApplicationQuota> applicationQuotas;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="vehicle_mark_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@NoFrame
+	@DescriptionsList(descriptionProperties="name")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner, ToLegal, ToDisburse")
+	private VehicleMark vehicleMark;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="insurance_period_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@NoFrame
+	@DescriptionsList(descriptionProperties="name")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner, EmittedScannerPeru,ToLegal, ToDisburse")
+	private InsurancePeriod insurancePeriod;
+	
+	//Transient//////////////////////////////////////////////
+	@Transient
+	@ManyToOne
+	@NoCreate
+	@NoModify
+	@DescriptionsList(descriptionProperties="margin", 
+		depends="this.product, this.frecuency, this.amountToFinance, this.period",
+		condition="${product.productId} = ? "
+				+ "and ${frecuency.frecuencyId} = ? "
+				+ "and ? between ${minimumAmount} and ${maximumAmount} "
+				+ "and ? between ${minimumPeriod} and ${maximumPeriod} ")
+	private ProductRate productRate;
+	
+	@Column(name = "additional_fee_percentage", precision=5, scale=2, nullable = true)
+	@ReadOnly
+    private BigDecimal additionalFeePercentage;
+	
+	//bi-directional many-to-one association to Person
+	@Transient
+	@ManyToOne
+	@ReferenceViews({
+		@ReferenceView(forViews="NewSingleRisk, NewFreeUnionRisk, NewDivorcedRisk, NewWidowerRisk, ToEmitRisk, ToEmitBusRisk, InsurerDataSend ",  value="Risk"),
+		@ReferenceView(forViews="NewSingle, NewFreeUnion, NewDivorced, NewWidower, ToEmit, ToEmitBus, ToEmitRestructured, ToLegal, ToDisburse,EmittedScanner,EmittedScannerPeru,ToEmitRegularize",  value="Reference"),
+		@ReferenceView(forViews="NewMarried", value="ReferenceSeparationProperties"),
+		@ReferenceView(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted", value="Reference"),
+		@ReferenceView(forViews="NewSinglePeru, NewFreeUnionPeru, NewDivorcedPeru, NewWidowerPeru,NewMarriedPeru, ToEmitPeru,ToEmitMarriedPeru", value="ReferencePeru")		
+		
+		})
+	@NoFrame
+	@NoCreate
+	@NoModify
+	@Action("ApplicationNaturalPersonReference.modifyDebtor")
+	@OnChange(ChangeForSeparationProperties.class)
+	@ReadOnly(forViews= "ToLegal, ToDisburse")
+	private NaturalPerson debtorNaturalPerson;
+	
+	@Transient
+	@ManyToOne
+	@ReferenceViews({
+		@ReferenceView(forViews="NewMarriedRisk, NewFreeUnionRisk, , NewDivorcedRisk, NewWidowerRisk, ToEmitRisk, ToEmitBusRisk,InsurerDataSend", value="Risk"),
+		@ReferenceView(forViews="NewMarried, NewFreeUnion,  ToEmit, ToEmitBus, ToEmitRestructured, ToLegal, ToDisburse,EmittedScanner,EmittedScannerPeru,ToEmitRegularize", value="Reference"),
+		@ReferenceView(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted", value="Reference"),
+		@ReferenceView(forViews="NewSinglePeru, NewFreeUnionPeru, NewDivorcedPeru, NewWidowerPeru,NewMarriedPeru, ToEmitPeru,ToEmitMarriedPeru", value="ReferencePeru")
+		})
+	@NoFrame
+	@NoCreate
+	@NoModify
+	@Action("ApplicationNaturalPersonReference.modifySpouse")
+	@OnChange(ChangeForSeparationProperties.class)
+	@ReadOnly(forViews="ToLegal, ToDisburse")
+	private NaturalPerson spouseNaturalPerson;
+	
+	@Transient
+	@ManyToOne
+	@ReferenceViews({
+		@ReferenceView(forViews="NewLegalPerson, ViewToEmitLegalPerson", value="Reference"),
+		@ReferenceView(forViews="ViewToEmitLegalPersonRisk, InsurerDataSend, ToLegal, ToDisburse", value="ReferenceReadOnly"),
+		@ReferenceView(forViews="ViewToEmitLegalPersonPeru, InsurerDataSend", value="ReferencePeru")		 
+		})
+	@NoFrame
+	@NoCreate
+	@ReadOnly(forViews="ToLegal, ToDisburse")
+	private LegalPerson debtorLegalPerson;
+	
+	//bi-directional many-to-one association to Company
+	@ManyToOne
+	@JoinColumn(name="company_id", nullable=true)
+	@NoCreate
+	@NoModify
+	@NoFrame
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, ToEmit, ToEmitBus, ToEmitBusRisk, ToEmitRisk, Emitted, ToEmitInsurances, , EmittedScanner, EmittedScannerPeru,ToLegal, ToDisburse")
+	@ReferenceView("Reference")
+	private Company company;
+	
+	@Column(name="insure_type", length=20)	
+  	@Required
+  	@ReadOnly  	
+  	private InsureType insureType;
+  	public enum InsureType { AUTOMATIC, MANUAL}
+
+	@Transient
+	@ReadOnly
+	@DisplaySize(10)
+	private Integer vehicleInsurance; 
+	
+	@Column(name = "legal_expenses", precision=11, scale=2, nullable = true)
+    @OnChange(CalculateAmountToFinance.class)
+  	@ReadOnly
+  	private BigDecimal legalExpenses;
+	
+	@OneToMany(mappedBy="application",cascade=CascadeType.ALL)
+  	@ListProperties("observationID, userCreate, userUpdate, dateInsert, dateUpdate, remark")
+  	@OrderBy("dateInsert")
+	@RemoveSelectedAction("")
+	@SaveAction("ObservationController.save")  	
+	@RemoveAction(("ObservationController.delete"))
+  	private List<ObservationApplication> observationsApplications;
+	
+	@Transient
+	@ReadOnly
+	@DisplaySize(10)
+	private BigDecimal summationTotalDividend;
+	
+	@Transient
+	@ReadOnly
+	@DisplaySize(10)
+	private BigDecimal summationTotalQuota;
+	
+	@JoinColumn(name="signatory_dealer_id")
+	@DescriptionsList(descriptionProperties="personRepresentative.name" , depends="this.dealer", condition="${dealer.dealerId}=?")
+	@OneToOne
+	@NoCreate
+	@NoModify
+	@OnChange(SignatoryDealerChangeEvent.class)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner, EmittedScannerPeru,ToLegal, ToDisburse")
+	private SignatoryDealer signatoryDealers;
+
+	@ManyToOne
+	@JoinColumn(name="signatory_person_id", nullable=true)
+	@ReadOnly
+	@NoFrame @NoCreate @NoModify
+	@ReferenceView("Reference")
+	private Person signatoryRepresentative;
+	
+	@Hidden
+	@ReadOnly
+	@Column ( name ="signatory_office_manager")
+	private String signatoryOfficeManager;
+	
+	@Transient
+	private Date payDate;
+	
+	@Column(name="commission_value")
+	private BigDecimal commissionValue;
+	
+	@Column(name="boss_ommission_value")
+	private BigDecimal bossCommissionValue;
+	
+	@DescriptionsList(descriptionProperties="personRepresentative.name" )
+	@JoinColumn(name="signatory_company_id")
+	@ManyToOne(fetch=FetchType.LAZY)
+	@NoCreate
+	@NoModify
+	@OnChange(SignatoryCompanyChangeEvent.class)
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner, EmittedScannerPeru,ToLegal, ToDisburse")
+	private SignatoryCompany signatoryCompany;
+	
+	/**
+	 * Se crea el campo Quotation para verificar que se cree una solicitud por cada cotizacion
+	 * si los datos estan incorrectos lo que se tiene que  hacer es crear otra cotizacion
+	 */
+	@JoinColumn(name="quotation_id")
+	@OneToOne
+	@NoCreate 
+	@NoModify
+	@NoFrame
+	private Quotation quotation;
+	
+	/**
+  	 * Columnas agregadas para los BUSES
+  	 */
+  	@Column(name="application_type", length=20)	  	
+  	@ReadOnly
+  	@OnChange(ChangeControlsForApplicationType.class)
+  	private ApplicationType applicationType;
+  	public enum ApplicationType {LIGHT_VEHICLES, BUSES}
+  	
+  	/**
+  	 * Atributos exclusivos para los busses
+  	 * CARROCERIA
+  	 */
+  	@Column(name = "bodywork_model")
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+  	private String bodyworkModel;
+  	
+  	@Column(name = "bodywork_homologation")
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+  	private String bodyworkHomologation;
+  	
+  	@Column(name = "bodywork_primary_color")
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+  	private String bodyworkPrimaryColor;
+	
+  	@Column(name = "bodywork_secondary_color")
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+  	private String bodyworkSecondaryColor;
+  	
+  	@Column(name = "bodywork_cooperative")
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+  	private String bodyworkCooperative;
+  	  	
+  	@Column(name = "bodywork_disk")
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner, ToLegal, ToDisburse")
+  	private String bodyworkDisk;
+  	
+  	@DescriptionsList(descriptionProperties="personRepresentative.name")
+  	@JoinColumn(name="signatory_company_client_id")
+	@OneToOne
+	@NoCreate
+	@NoModify
+	@OnChange(SignatoryCompanyClientChangeEvent.class)
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private SignatoryCompanyClient signatoryCompanyClients;
+  	
+  	@ManyToOne
+	@JoinColumn(name = "depreciation_id", nullable = true)
+  	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedRegularize, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private Depreciation depreciation;
+	
+	public Application() {
+		if (applicationType!=null){
+			if (applicationType.equals(ApplicationType.LIGHT_VEHICLES)){
+				
+			}
+		}
+	}
+	
+	/////////////////////////////////////////////////////////////////////////////
+	// Campos agregados para los codeudores
+	/////////////////////////////////////////////////////////////////////////////
+	@Transient
+	@OneToMany(mappedBy="application",cascade=CascadeType.ALL)
+	@AsEmbedded
+	//@CollectionView("Collection")
+	@ListProperties("person.identification, person.name, positionCompany, person.spousePerson.identification, person.spousePerson.name")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, ToLegal, ToDisburse")
+	private List<ApplicationCoDebtorPerson> applicationCoDebtorPersons;
+	
+	@OneToMany(mappedBy="application",cascade=CascadeType.ALL)
+  	@ListProperties("applicationRequirementsId, requirements.documentName, applicationRequirementsStatus.name ,documents, observation")
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, ToLegal, ToDisburse")
+	@ElementCollection
+  	private List<ApplicationRequirements> requirementsDebtor;
+	
+	@Column(name="application_type_person")	
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, ToLegal, ToDisburse")
+	@OnChange(CalculateAmountToFinance.class)
+	private ApplicationTypePerson applicationTypePerson;
+	public enum ApplicationTypePerson {NATURAL_PERSON, LEGAL_PERSON}
+	
+	@Column(name = "vehicle_ramv_cpn")
+	private String vehicleRamvCpn;
+	
+	/*
+	 * Campo para indicar la depreciacion del seguro de vida desgravmen
+	 */
+	@ManyToOne
+	@JoinColumn(name = "depreciation_mortgage_id", nullable = true)
+	private Depreciation depreciationMortgage;
+	
+	@Column(name="billing_date")
+	private Date billingDate; 
+	
+	@ManyToOne
+	@JoinColumn(name = "master_number_policy_id", nullable = true)
+	private MasterNumberPolicy masterNumberPolicy;
+	
+	
+	@Column (name = "city_placement", length=20)
+	@ReadOnly
+	private String cityPlacement;
+	
+	private Boolean restructured = false; 
+	
+	/*
+	 * COLUMNAS AGREGADAS PARA MANTENIMIENTO EN PERU
+	 */
+	@Column(name = "quota_month_insure")
+  	private BigDecimal quotaMonthInsure;
+  	
+  	@Column(name = "quota_month_mortgage")
+  	private BigDecimal quotaMonthMortgage;
+
+  	@Column(name="application_financed_insure_fisrt_year", length=20)	  	
+  	private ApplicationFinancedInsureFisrtYear applicationFinancedInsureFisrtYear;
+  	public enum ApplicationFinancedInsureFisrtYear {NO, SI}
+	
+  	@Column(name = "value_credit_research")
+	@ReadOnly	
+	private BigDecimal valueCreditResearch;
+  	
+  	@Column(name="use_gas")
+	@OnChange(ChangeForUseGasApplication.class)
+	@DefaultValueCalculator(DefaultValueIntro.class)
+	@ReadOnly(forViews="ViewQuotationEmitContractPeru,ViewQuotationRequestEmissionPeru")
+	private YesOrNot useGas;
+	
+	@Column(name = "gas_value")
+	@Hidden
+	@OnChange(ChangeForValueGas.class)
+	@ReadOnly(forViews="ViewQuotationEmitContractPeru,ViewQuotationRequestEmissionPeru")
+	private BigDecimal gasValue;
+	
+	@Column(name="percentage_credit_research")  	
+  	@ReadOnly
+  	private BigDecimal percentageCreditResearch;
+	
+	@Transient
+	@ReadOnly
+	@DisplaySize(10)
+	private BigDecimal summationTotalInsurer;
+	
+	@Transient
+	@ReadOnly
+	@DisplaySize(10)
+	private BigDecimal summationTotalMortgageInsurer;
+	
+	@JoinColumn(name ="dealer_branch_office_id" , nullable=true)
+	@DescriptionsList(descriptionProperties="name" , depends="this.dealer", condition="${dealer.dealerId}=?")
+	@ManyToOne
+	@NoCreate
+	@NoModify	
+	@ReadOnly(forViews="ToVerifying, ToApprove, ToAppeal, ToBill, Denied, Emitted, ToEmitInsurances, EmittedScanner,EmittedScannerPeru, ToLegal, ToDisburse")
+	private DealerBranchOffice dealerBranchOffice;
+	
+	@ManyToOne
+	@JoinColumn(name="vehicle_colour_id", nullable= true)
+	@NoFrame
+	@ReferenceView("Reference")
+	private VehicleColour vehicleColourEntity;
+	
+	@Column(name="certificate_number_insurance")
+	private String certificateNumberInsurance;
+	
+	@Column(name="certificate_number_insurance_mortgage")
+	private String certificateNumberInsuranceMortgage;
+	
+	@Column(name = "application_type_portfolio", length = 20)
+	@ReadOnly
+	private ApplicationTypePortfolio applicationTypePortfolio;
+	public enum ApplicationTypePortfolio {ORIGINATION, PURCHASE};
+	
+	@Column(name="individual_certificate_number")
+	private Integer individualCertificateNumber;
+	
+	
+	@Column(name = "legal_expenses_notaries", precision=11, scale=2, nullable = true)    	
+  	@ReadOnly
+  	private BigDecimal legalExpensesNotaries;
+	
+	public Integer getApplicationId() {
+		return this.applicationId;
+	}
+
+	public void setApplicationId(Integer applicationId) {
+		this.applicationId = applicationId;
+	}
+
+	public BigDecimal getInsuranceAmount() {
+		return this.insuranceAmount;
+	}
+
+	public void setInsuranceAmount(BigDecimal insuranceAmount) {
+		this.insuranceAmount = insuranceAmount;
+	}
+
+	public BigDecimal getAdditionalFee() {
+		return additionalFee;
+	}
+
+	public void setAdditionalFee(BigDecimal additionalFee) {
+		this.additionalFee = additionalFee;
+	}
+
+	public BigDecimal getAmountToFinance() {
+		return amountToFinance;
+	}
+
+	public void setAmountToFinance(BigDecimal amountToFinance) {
+		this.amountToFinance = amountToFinance;
+	}
+
+	public Date getApplicationDate() {
+		return applicationDate;
+	}
+
+	public void setApplicationDate(Date applicationDate) {
+		this.applicationDate = applicationDate;
+	}
+
+	public GpsDevice getGpsDevice() {
+		return gpsDevice;
+	}
+
+	public void setGpsDevice(GpsDevice gpsDevice) {
+		this.gpsDevice = gpsDevice;
+	}
+
+	public BigDecimal getGpsDeviceAmount() {
+		return gpsDeviceAmount;
+	}
+
+	public void setGpsDeviceAmount(BigDecimal gpsDeviceAmount) {
+		this.gpsDeviceAmount = gpsDeviceAmount;
+	}
+
+	public YesOrNot getInsuranceEndorsement() {
+		return insuranceEndorsement;
+	}
+
+	public void setInsuranceEndorsement(YesOrNot insuranceEndorsement) {
+		this.insuranceEndorsement = insuranceEndorsement;
+	}
+
+	public BigDecimal getInsuranceMortgageAmount() {
+		return insuranceMortgageAmount;
+	}
+
+	public void setInsuranceMortgageAmount(BigDecimal insuranceMortgageAmount) {
+		this.insuranceMortgageAmount = insuranceMortgageAmount;
+	}
+
+	public Date getPaymentDate() {
+		return paymentDate;
+	}
+
+	public void setPaymentDate(Date paymentDate) {
+		this.paymentDate = paymentDate;
+	}
+
+	public BigDecimal getRegistrationFee() {
+		return registrationFee;
+	}
+
+	public void setRegistrationFee(BigDecimal registrationFee) {
+		this.registrationFee = registrationFee;
+	}
+
+	public BigDecimal getRate() {
+		return this.rate;
+	}
+
+	public void setRate(BigDecimal rate) {
+		this.rate = rate;
+	}
+
+	
+	public Person getDebtorPerson() {
+		return debtorPerson;
+	}
+
+	public void setDebtorPerson(Person debtorPerson) {
+		this.debtorPerson = debtorPerson;
+	}
+
+	public Person getSpousePerson() {
+		return spousePerson;
+	}
+
+	public void setSpousePerson(Person spousePerson) {
+		this.spousePerson = spousePerson;
+	}
+
+	public ApplicationStatus getApplicationStatus() {
+		return applicationStatus;
+	}
+
+	public void setApplicationStatus(ApplicationStatus applicationStatus) {
+		this.applicationStatus = applicationStatus;
+	}
+
+	public List<ApplicationPerson> getApplicationPersons() {
+		return this.applicationPersons;
+	}
+
+	public void setApplicationPersons(List<ApplicationPerson> applicationPersons) {
+		this.applicationPersons = applicationPersons;
+	}
+
+	public ApplicationPerson addApplicationPerson(ApplicationPerson applicationPerson) {
+		getApplicationPersons().add(applicationPerson);
+		applicationPerson.setApplication(this);
+
+		return applicationPerson;
+	}
+
+	public ApplicationPerson removeApplicationPerson(ApplicationPerson applicationPerson) {
+		getApplicationPersons().remove(applicationPerson);
+		applicationPerson.setApplication(null);
+
+		return applicationPerson;
+	}
+
+	public Product getProduct() {
+		return this.product;
+	}
+
+	public void setProduct(Product product) {
+		this.product = product;
+	}
+
+	public Frecuency getFrecuency() {
+		return frecuency;
+	}
+
+	public void setFrecuency(Frecuency frecuency) {
+		this.frecuency = frecuency;
+	}
+	
+	public ProductRate getProductRate() {
+		return productRate;
+	}
+
+	public void setProductRate(ProductRate productRate) {
+		this.productRate = productRate;
+	}
+
+	public Integer getCreditBureauRating() {
+		return creditBureauRating;
+	}
+
+	public void setCreditBureauRating(Integer creditBureauRating) {
+		this.creditBureauRating = creditBureauRating;
+	}
+
+	public BigDecimal getEntranceValue() {
+		return entranceValue;
+	}
+
+	public void setEntranceValue(BigDecimal entranceValue) {
+		this.entranceValue = entranceValue;
+	}
+
+	public BigDecimal getVehicleValue() {
+		return vehicleValue;
+	}
+
+	public void setVehicleValue(BigDecimal vehicleValue) {
+		this.vehicleValue = vehicleValue;
+	}
+
+	public VehicleYear getVehicleYear() {
+		return vehicleYear;
+	}
+
+	public void setVehicleYear(VehicleYear vehicleYear) {
+		this.vehicleYear = vehicleYear;
+	}
+
+	public Dealer getDealer() {
+		return dealer;
+	}
+
+	public void setDealer(Dealer dealer) {
+		this.dealer = dealer;
+	}
+
+	public Seller getSeller() {
+		return seller;
+	}
+
+	public void setSeller(Seller seller) {
+		this.seller = seller;
+	}
+
+	public VehicleModel getVehicleModel() {
+		return vehicleModel;
+	}
+
+	public void setVehicleModel(VehicleModel vehicleModel) {
+		this.vehicleModel = vehicleModel;
+		try {
+			this.vehicleMark = vehicleModel.getVehicleMark();			
+		} catch (NullPointerException e) {
+			// TODO: handle exception
+		}
+	}
+
+	public VehicleMark getVehicleMark() {
+		return vehicleMark;
+	}
+
+	public void setVehicleMark(VehicleMark vehicleMark) {
+		this.vehicleMark = vehicleMark;
+	}
+
+	public BigDecimal getCurrentDebt() {
+		return currentDebt;
+	}
+
+	public void setCurrentDebt(BigDecimal currentDebt) {
+		this.currentDebt = currentDebt;
+	}
+
+	public BigDecimal getActualQuotaSystem() {
+		return actualQuotaSystem;
+	}
+
+	public void setActualQuotaSystem(BigDecimal actualQuotaSystem) {
+		this.actualQuotaSystem = actualQuotaSystem;
+	}
+
+	public Office getOffice() {
+		return office;
+	}
+
+	public void setOffice(Office office) {
+		this.office = office;
+	}
+
+	public Currency getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(Currency currency) {
+		this.currency = currency;
+	}
+
+	public Collection<ApplicationQuota> getApplicationQuotas() {
+		return applicationQuotas;
+	}
+
+	public void setApplicationQuotas(Collection<ApplicationQuota> applicationQuotas) {
+		this.applicationQuotas = applicationQuotas;
+	}
+
+	public String getDocuments() {
+		return documents;
+	}
+
+	public void setDocuments(String documents) {
+		this.documents = documents;
+	}
+
+	public String getRemarks() {
+		return remarks;
+	}
+
+	public void setRemarks(String remarks) {
+		this.remarks = remarks;
+	}
+
+	public Date getDisbursementDate() {
+		return disbursementDate;
+	}
+
+	public void setDisbursementDate(Date disbursementDate) {
+		this.disbursementDate = disbursementDate;
+	}
+
+	public Date getIssueDate() {
+		return issueDate;
+	}
+
+	public void setIssueDate(Date issueDate) {
+		this.issueDate = issueDate;
+	}
+
+	public java.math.BigDecimal getEntrancePercentage() {
+		return entrancePercentage;
+	}
+
+	public void setEntrancePercentage(java.math.BigDecimal entrancePercentage) {
+		this.entrancePercentage = entrancePercentage;
+	}
+
+	public YesOrNot getInsuranceFinanced() {
+		return insuranceFinanced;
+	}
+
+	public void setInsuranceFinanced(YesOrNot insuranceFinanced) {
+		this.insuranceFinanced = insuranceFinanced;
+	}
+
+	public Period getPeriod() {
+		return period;
+	}
+
+	public void setPeriod(Period period) {
+		this.period = period;
+	}
+
+	public java.math.BigDecimal getAdditionalFeePercentage() {
+		return additionalFeePercentage;
+	}
+
+	public void setAdditionalFeePercentage(
+			java.math.BigDecimal additionalFeePercentage) {
+		this.additionalFeePercentage = additionalFeePercentage;
+	}
+
+	public VehicleUse getVehicleUse() {
+		return vehicleUse;
+	}
+
+	public void setVehicleUse(VehicleUse vehicleUse) {
+		this.vehicleUse = vehicleUse;
+	}
+
+	public String getVehicleModelName() {
+		return vehicleModelName;
+	}
+
+	public void setVehicleModelName(String vehicleModelName) {
+		this.vehicleModelName = vehicleModelName;
+	}
+	
+	public String getVehiclePlateNumber() {
+		return vehiclePlateNumber;
+	}
+
+	public void setVehiclePlateNumber(String vehiclePlateNumber) {
+		this.vehiclePlateNumber = vehiclePlateNumber;
+	}
+
+	public String getVehicleMotorNumber() {
+		return vehicleMotorNumber;
+	}
+
+	public void setVehicleMotorNumber(String vehicleMotorNumber) {
+		this.vehicleMotorNumber = vehicleMotorNumber;
+	}
+
+	public String getVehicleChassisNumber() {
+		return vehicleChassisNumber;
+	}
+
+	public void setVehicleChassisNumber(String vehicleChassisNumber) {
+		this.vehicleChassisNumber = vehicleChassisNumber;
+	}
+
+	public String getVehicleColour() {
+		return vehicleColour;
+	}
+
+	public void setVehicleColour(String vehicleColour) {
+		this.vehicleColour = vehicleColour;
+	}
+
+	public String getVehicleClass() {
+		return vehicleClass;
+	}
+
+	public void setVehicleClass(String vehicleClass) {
+		this.vehicleClass = vehicleClass;
+	}
+
+	public String getVehicleType() {
+		return vehicleType;
+	}
+
+	public void setVehicleType(String vehicleType) {
+		this.vehicleType = vehicleType;
+	}
+
+	public String getContractNumber() {
+		return contractNumber;
+	}
+
+	public void setContractNumber(String contractNumber) {
+		this.contractNumber = contractNumber;
+	}
+
+	public NaturalPerson getDebtorNaturalPerson() {
+		if(debtorPerson!=null)
+			return XPersistence.getManager().find(NaturalPerson.class, debtorPerson.getPersonId());
+		else 
+			return null;
+	}
+
+	public void setDebtorNaturalPerson(NaturalPerson debtorNaturalPerson) {
+		try {
+			this.debtorNaturalPerson = debtorNaturalPerson;
+			this.debtorPerson = debtorNaturalPerson.getPerson();
+			
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+
+
+	public NaturalPerson getSpouseNaturalPerson() {
+		if (spousePerson!=null)
+			return XPersistence.getManager().find(NaturalPerson.class, spousePerson.getPersonId());
+		else
+			return null;
+	}
+
+	public void setSpouseNaturalPerson(NaturalPerson spouseNaturalPerson) {
+		this.spouseNaturalPerson = spouseNaturalPerson;
+	}
+
+	public BigDecimal getInsuranceMortgageRate()
+	{
+		return new BigDecimal("0.000583333");
+	}
+	
+	public Tracker getTracker() {
+		return tracker;
+	}
+
+	public void setTracker(Tracker tracker) {
+		this.tracker = tracker;
+	}
+
+	public Insurer getMortgageInsurer() {
+		return mortgageInsurer;
+	}
+
+	public void setMortgageInsurer(Insurer mortgageInsurer) {
+		this.mortgageInsurer = mortgageInsurer;
+	}
+
+	public Insurer getVehicleInsurer() {
+		return vehicleInsurer;
+	}
+
+	public void setVehicleInsurer(Insurer vehicleInsurer) {
+		this.vehicleInsurer = vehicleInsurer;
+	}
+
+	public CreditOfficer getCreditOfficer() {
+		return creditOfficer;
+	}
+
+	public void setCreditOfficer(CreditOfficer creditOfficer) {
+		this.creditOfficer = creditOfficer;
+	}
+
+	public InsurancePeriod getInsurancePeriod() {
+		return insurancePeriod;
+	}
+
+	public void setInsurancePeriod(InsurancePeriod insurancePeriod) {
+		this.insurancePeriod = insurancePeriod;
+	}
+	
+	public Company getCompany() {
+		return company;
+	}
+
+	public void setCompany(Company company) {
+		this.company = company;
+	}
+	
+
+	@PrePersist
+	private void createApplication()
+	{
+		this.applicationDate=new Date();
+		product = XPersistence.getManager().find(Product.class, "AUT");
+		frecuency = XPersistence.getManager().find(Frecuency.class, new Integer(1));
+		
+		if(this.debtorPerson.getPersonType().equals("NAT")){//TIPO PERSONA NAT=NATURAL / JUR=JUR�DICA
+			if (this.debtorNaturalPerson!=null){
+				this.debtorPerson=this.debtorNaturalPerson.getPerson();				
+			}
+			if (this.spouseNaturalPerson!=null)
+				this.spousePerson=this.spouseNaturalPerson.getPerson();
+		}else
+			this.debtorPerson=this.debtorLegalPerson.getPerson();
+//		this.positionRepresentative = "APODERADO ESPECIAL";
+//		this.setLegalRepresentative();
+		
+		if (this.getSignatoryCompany()== null){
+			this.setSignatoryRepresentative(null);
+			this.setPositionRepresentative(null);
+		}else{
+			this.setSignatoryRepresentative(this.getSignatoryCompany().getPersonRepresentative());
+			this.setPositionRepresentative(this.getSignatoryCompany().getOfficeManager());
+		}
+
+		
+		if (getSignatoryDealers()!=null){
+			setSignatoryRepresentative(getSignatoryDealers().getPersonRepresentative());			
+			setSignatoryOfficeManager(getSignatoryDealers().getOfficeManager());
+		}
+		if (this.vehicleColourEntity!=null ) {
+			this.vehicleColour = this.vehicleColourEntity.getName();
+		}
+
+	}
+	
+	@PreUpdate
+	private void updateApplication()
+	{
+		this.applicationDate=new Date();
+		
+		if(this.debtorPerson.getPersonType().equals("NAT")){//TIPO PERSONA NAT=NATURAL / JUR=JUR�DICA
+			if (this.debtorNaturalPerson!=null){
+				this.debtorPerson=this.debtorNaturalPerson.getPerson();				
+			}
+			if (this.spouseNaturalPerson!=null)
+				this.spousePerson=this.spouseNaturalPerson.getPerson();
+		}else{
+			try {
+				this.debtorPerson=this.debtorLegalPerson.getPerson();
+				
+			} catch (NullPointerException e) {
+				// TODO: handle exception
+			}
+			
+		}
+//		this.positionRepresentative = "APODERADO ESPECIAL";
+//		this.setLegalRepresentative();
+		
+//		if (this.getSignatoryCompany()== null){
+//			this.setSignatoryRepresentative(null);
+//			this.setPositionRepresentative(null);
+//		}else{
+//			this.setSignatoryRepresentative(this.getSignatoryCompany().getPersonRepresentative());
+//			this.setPositionRepresentative(this.getSignatoryCompany().getOfficeManager());
+//		}
+		
+//		try {
+//			this.signatoryRepresentative = signatoryDealers.getPersonRepresentative();
+//			this.signatoryOfficeManager = signatoryDealers.getOfficeManager();			
+//		} catch (NullPointerException e) {
+//			e.printStackTrace();
+//		}
+		
+		System.out.println(getSignatoryCompanyClients());
+		
+		
+		if (getSignatoryDealers()!=null){
+			setSignatoryRepresentative(getSignatoryDealers().getPersonRepresentative());			
+			setSignatoryOfficeManager(getSignatoryDealers().getOfficeManager());
+		}
+		if (this.vehicleColourEntity!=null ) {
+			this.vehicleColour = this.vehicleColourEntity.getName();
+		}
+		
+	}
+	private void setLegalRepresentative(){
+	}
+
+	@Transient
+	@Depends("rate")
+	public BigDecimal getEffectiveRate() {
+		
+		BigDecimal divisor; 
+		
+		divisor = getRate().divide(new BigDecimal("1200"), 6, RoundingMode.CEILING);
+		
+		return new BigDecimal(Math.pow(1 + divisor.doubleValue(), 12) - 1).multiply(new BigDecimal("100"));
+	}
+
+	public Insurer getInsurer() {
+		return insurer;
+	}
+
+	public void setInsurer(Insurer insurer) {
+		this.insurer = insurer;
+	}
+	
+	public Integer getVehicleInsurance() {
+		//return vehicleInsurance;
+		return this.getPeriod().getPeriodId();
+	}
+
+	public void setVehicleInsurance(Integer vehicleInsurance) {
+		this.vehicleInsurance = vehicleInsurance;
+	}
+	
+	public BigDecimal getLegalExpenses() {
+		return legalExpenses;
+	}
+
+	public void setLegalExpenses(BigDecimal legalExpenses) {
+		this.legalExpenses = legalExpenses;
+	}
+
+	public LegalPerson getDebtorLegalPerson() {
+		if(debtorPerson!=null)
+			return XPersistence.getManager().find(LegalPerson.class, debtorPerson.getPersonId());
+		else 
+			return null;
+	}
+
+	public void setDebtorLegalPerson(LegalPerson debtorLegalPerson) {
+		this.debtorLegalPerson = debtorLegalPerson;
+	}
+
+	public BigDecimal getSummationTotalDividend() {
+		//return summation;
+		BigDecimal amount = BigDecimal.ZERO;
+		for(ApplicationQuota aq:getApplicationQuotas()){
+			amount=amount.add(aq.getTotalDividend());
+			summationTotalDividend=amount;
+		}
+		return summationTotalDividend;
+	}
+
+	public void setSummationTotalDividend(BigDecimal summation) {
+		this.summationTotalDividend = summation;
+	}
+	
+	public BigDecimal getSummationTotalQuota() {
+		//return summation;
+		BigDecimal amount = BigDecimal.ZERO;
+		for(ApplicationQuota aq:getApplicationQuotas()){
+			amount=amount.add(aq.getTotalQuota());
+			summationTotalQuota=amount;
+		}
+		return summationTotalQuota;
+	}
+
+	public void setSummationTotalQuota(BigDecimal summation) {
+		this.summationTotalQuota = summation;
+	}
+
+	public String getLegalRepresentative() {
+		return legalRepresentative;
+	}
+
+	public void setLegalRepresentative(String legalRepresentative) {
+		this.legalRepresentative = legalRepresentative;
+	}
+
+	public String getPositionRepresentative() {
+		return positionRepresentative;
+	}
+
+	public void setPositionRepresentative(String positionRepresentative) {
+		this.positionRepresentative = positionRepresentative;
+	}
+
+	public InsureType getInsureType() {
+		return insureType;
+	}
+
+	public void setInsureType(InsureType insureType) {
+		this.insureType = insureType;
+	}
+
+	public List<ObservationApplication> getObservationsApplications() {
+		return observationsApplications;
+	}
+
+	public void setObservationsApplications(List<ObservationApplication> observationsApplications) {
+		this.observationsApplications = observationsApplications;
+	}
+
+	public SignatoryDealer getSignatoryDealers() {
+		return signatoryDealers;
+	}
+
+	public void setSignatoryDealers(SignatoryDealer signatoryDealers) {
+		this.signatoryDealers = signatoryDealers;
+	}
+
+	
+
+	public String getSignatoryOfficeManager() {
+		return signatoryOfficeManager;
+	}
+
+	public void setSignatoryOfficeManager(String signatoryOfficeManager) {
+		this.signatoryOfficeManager = signatoryOfficeManager;
+	}
+
+	public Person getSignatoryRepresentative() {
+		return signatoryRepresentative;
+	}
+
+	public void setSignatoryRepresentative(Person signatoryRepresentative) {
+		this.signatoryRepresentative = signatoryRepresentative;
+	}
+
+	public Date getPayDate() {
+		return payDate;
+	}
+
+	public void setPayDate(Date payDate) {
+		this.payDate = payDate;
+	}
+
+	public BigDecimal getCommissionValue() {
+		if (commissionValue==null){
+			commissionValue = seller.getCommissionValue();
+		}
+		return commissionValue;
+	}
+
+	public void setCommissionValue(BigDecimal commissionValue) {
+		this.commissionValue = commissionValue;
+	}
+
+	public BigDecimal getBossCommissionValue() {
+		if (bossCommissionValue==null){
+			bossCommissionValue = seller.getBossCommissionValue();
+		}
+		return bossCommissionValue;
+	}
+
+	public void setBossCommissionValue(BigDecimal bossCommissionValue) {
+		this.bossCommissionValue = bossCommissionValue;
+	}
+
+	public SignatoryCompany getSignatoryCompany() {
+		return signatoryCompany;
+	}
+
+	public void setSignatoryCompany(SignatoryCompany signatoryCompany) {
+		this.signatoryCompany = signatoryCompany;
+	}
+
+	public Quotation getQuotation() {
+		return quotation;
+	}
+
+	public void setQuotation(Quotation quotation) {
+		this.quotation = quotation;
+	}
+
+
+	public ApplicationType getApplicationType() {
+		return applicationType;
+	}
+
+
+	public void setApplicationType(ApplicationType applicationType) {
+		this.applicationType = applicationType;
+	}
+
+
+	public String getBodyworkModel() {
+		return bodyworkModel;
+	}
+
+
+	public void setBodyworkModel(String bodyworkModel) {
+		this.bodyworkModel = bodyworkModel;
+	}
+
+
+	public String getBodyworkHomologation() {
+		return bodyworkHomologation;
+	}
+
+
+	public void setBodyworkHomologation(String bodyworkHomologation) {
+		this.bodyworkHomologation = bodyworkHomologation;
+	}
+
+
+	public String getBodyworkPrimaryColor() {
+		return bodyworkPrimaryColor;
+	}
+
+
+	public void setBodyworkPrimaryColor(String bodyworkPrimaryColor) {
+		this.bodyworkPrimaryColor = bodyworkPrimaryColor;
+	}
+
+
+	public String getBodyworkSecondaryColor() {
+		return bodyworkSecondaryColor;
+	}
+
+
+	public void setBodyworkSecondaryColor(String bodyworkSecondaryColor) {
+		this.bodyworkSecondaryColor = bodyworkSecondaryColor;
+	}
+
+
+	public String getBodyworkCooperative() {
+		return bodyworkCooperative;
+	}
+	public void setBodyworkCooperative(String bodyworkCooperative) {
+		this.bodyworkCooperative = bodyworkCooperative;
+	}
+
+
+	public String getBodyworkDisk() {
+		return bodyworkDisk;
+	}
+	public void setBodyworkDisk(String bodyworkDisk) {
+		this.bodyworkDisk = bodyworkDisk;
+	}
+
+	public List<ApplicationCoDebtorPerson> getApplicationCoDebtorPersons() {
+		return applicationCoDebtorPersons;
+	}
+	public void setApplicationCoDebtorPersons(List<ApplicationCoDebtorPerson> applicationCoDebtorPersons) {
+		this.applicationCoDebtorPersons = applicationCoDebtorPersons;
+	}
+
+	public SignatoryCompanyClient getSignatoryCompanyClients() {
+		return signatoryCompanyClients;
+	}
+	public void setSignatoryCompanyClients(SignatoryCompanyClient signatoryCompanyClients) {
+		this.signatoryCompanyClients = signatoryCompanyClients;
+	}
+
+	public Depreciation getDepreciation() {
+		return depreciation;
+	}
+	public void setDepreciation(Depreciation depreciation) {
+		this.depreciation = depreciation;
+	}
+
+	public List<ApplicationRequirements> getRequirementsDebtor() {
+		return requirementsDebtor;
+	}
+	public void setRequirementsDebtor(List<ApplicationRequirements> requirementsDebtor) {
+		this.requirementsDebtor = requirementsDebtor;
+	}
+
+	public ApplicationTypePerson getApplicationTypePerson() {
+		return applicationTypePerson;
+	}
+	public void setApplicationTypePerson(ApplicationTypePerson applicationTypePerson) {
+		this.applicationTypePerson = applicationTypePerson;
+	}
+
+	public String getVehicleRamvCpn() {
+		return vehicleRamvCpn;
+	}
+
+	public void setVehicleRamvCpn(String vehicleRamvCpn) {
+		this.vehicleRamvCpn = vehicleRamvCpn;
+	}
+
+	public Date getBillingDate() {
+		return billingDate;
+	}
+
+	public void setBillingDate(Date billingDate) {
+		this.billingDate = billingDate;
+	}
+
+	public Depreciation getDepreciationMortgage() {
+		return depreciationMortgage;
+	}
+
+	public void setDepreciationMortgage(Depreciation depreciationMortgage) {
+		this.depreciationMortgage = depreciationMortgage;
+	}
+
+	public MasterNumberPolicy getMasterNumberPolicy() {
+		return masterNumberPolicy;
+	}
+
+	public void setMasterNumberPolicy(MasterNumberPolicy masterNumberPolicy) {
+		this.masterNumberPolicy = masterNumberPolicy;
+	}
+
+	public String getCityPlacement() {
+		return cityPlacement;
+	}
+
+	public void setCityPlacement(String cityPlacement) {
+		this.cityPlacement = cityPlacement;
+	}
+
+	public Boolean getRestructured() {
+		return restructured;
+	}
+
+	public void setRestructured(Boolean restructured) {
+		this.restructured = restructured;
+	}
+
+	public BigDecimal getQuotaMonthInsure() {
+		return quotaMonthInsure;
+		
+	}	
+	public void setQuotaMonthInsure(BigDecimal quotaMonthInsure) {
+		this.quotaMonthInsure = quotaMonthInsure;
+	}
+
+	public BigDecimal getQuotaMonthMortgage() {
+		return quotaMonthMortgage;
+	}
+
+	public void setQuotaMonthMortgage(BigDecimal quotaMonthMortgage) {
+		this.quotaMonthMortgage = quotaMonthMortgage;
+	}
+
+	public ApplicationFinancedInsureFisrtYear getApplicationFinancedInsureFisrtYear() {
+		return applicationFinancedInsureFisrtYear;
+	}
+
+	public void setApplicationFinancedInsureFisrtYear(
+			ApplicationFinancedInsureFisrtYear applicationFinancedInsureFisrtYear) {
+		this.applicationFinancedInsureFisrtYear = applicationFinancedInsureFisrtYear;
+	}
+
+	public BigDecimal getValueCreditResearch() {
+		return valueCreditResearch;
+	}
+
+	public void setValueCreditResearch(BigDecimal valueCreditResearch) {
+		this.valueCreditResearch = valueCreditResearch;
+	}
+
+	public YesOrNot getUseGas() {
+		return useGas;
+	}
+
+	public void setUseGas(YesOrNot useGas) {
+		this.useGas = useGas;
+	}
+
+	public BigDecimal getGasValue() {
+		return gasValue;
+	}
+
+	public void setGasValue(BigDecimal gasValue) {
+		this.gasValue = gasValue;
+	}
+
+	public BigDecimal getPercentageCreditResearch() {
+		return percentageCreditResearch;
+	}
+
+	public void setPercentageCreditResearch(BigDecimal percentageCreditResearch) {
+		this.percentageCreditResearch = percentageCreditResearch;
+	}
+
+	public BigDecimal getSummationTotalInsurer() {
+		BigDecimal amount = BigDecimal.ZERO;
+		for(ApplicationQuota aq:getApplicationQuotas()){
+			amount=amount.add(aq.getInsurance());
+			summationTotalInsurer=amount;
+		}
+		return summationTotalInsurer;
+	}
+
+	public void setSummationTotalInsurer(BigDecimal summationTotalInsurer) {
+		this.summationTotalInsurer = summationTotalInsurer;
+	}
+
+	public BigDecimal getSummationTotalMortgageInsurer() {
+		
+		//return summation;
+		BigDecimal amount = BigDecimal.ZERO;
+		for(ApplicationQuota aq:getApplicationQuotas()){
+			amount=amount.add(aq.getInsuranceMortgage());
+			summationTotalMortgageInsurer=amount;
+		}
+		return summationTotalMortgageInsurer;
+		
+	}
+
+	public void setSummationTotalMortgageInsurer(BigDecimal summationTotalMortgageInsurer) {
+		this.summationTotalMortgageInsurer = summationTotalMortgageInsurer;
+	}
+
+	public DealerBranchOffice getDealerBranchOffice() {
+		return dealerBranchOffice;
+	}
+
+	public void setDealerBranchOffice(DealerBranchOffice dealerBranchOffice) {
+		this.dealerBranchOffice = dealerBranchOffice;
+	}
+
+	public VehicleColour getVehicleColourEntity() {
+		return vehicleColourEntity;
+	}
+
+	public void setVehicleColourEntity(VehicleColour vehicleColourEntity) {
+		this.vehicleColourEntity = vehicleColourEntity;
+	}
+
+	public String getCertificateNumberInsurance() {
+		return certificateNumberInsurance;
+	}
+
+	public void setCertificateNumberInsurance(String certificateNumberInsurance) {
+		this.certificateNumberInsurance = certificateNumberInsurance;
+	}
+
+	public String getCertificateNumberInsuranceMortgage() {
+		return certificateNumberInsuranceMortgage;
+	}
+
+	public void setCertificateNumberInsuranceMortgage(String certificateNumberInsuranceMortgage) {
+		this.certificateNumberInsuranceMortgage = certificateNumberInsuranceMortgage;
+	}
+
+	public ApplicationTypePortfolio getApplicationTypePortfolio() {
+		return applicationTypePortfolio;
+	}
+
+	public void setApplicationTypePortfolio(ApplicationTypePortfolio applicationTypePortfolio) {
+		this.applicationTypePortfolio = applicationTypePortfolio;
+	}
+
+	public Integer getIndividualCertificateNumber() {
+		return individualCertificateNumber;
+	}
+
+	public void setIndividualCertificateNumber(Integer individualCertificateNumber) {
+		this.individualCertificateNumber = individualCertificateNumber;
+	}
+
+	public BigDecimal getLegalExpensesNotaries() {
+		return legalExpensesNotaries;
+	}
+
+	public void setLegalExpensesNotaries(BigDecimal legalExpensesNotaries) {
+		this.legalExpensesNotaries = legalExpensesNotaries;
+	}
+	
+	
+}

@@ -1,0 +1,88 @@
+package com.creditflow.model;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.Transient;
+
+import org.openxava.annotations.DefaultValueCalculator;
+import org.openxava.annotations.Hidden;
+import org.openxava.annotations.ListAction;
+import org.openxava.annotations.ListProperties;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoFrame;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.OnSelectElementAction;
+import org.openxava.annotations.PropertyValue;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.RemoveAction;
+import org.openxava.annotations.View;
+
+import com.creditflow.calculators.DefaultStatusQuotation;
+import com.creditflow.calculators.DefaultValueColumnsReport;
+
+import jdk.internal.org.objectweb.asm.tree.analysis.Value;
+
+
+@View(members="fromDate, toDate; columnsReportCompletes")
+public class ViewApplicationCompleteReport {
+	
+	@Column	
+	private Date fromDate;
+	
+	@Column	
+	private Date toDate;
+	
+	@Transient
+	@OneToMany
+	@NoCreate
+	@NoModify	
+	@ReadOnly
+	@RemoveAction("")
+	@ListProperties("columnId, nameColumn")  		
+	@ListAction("SelectColumnsReportComplete.generateReport")
+	@OrderBy(value="columnId")	
+	private List<ColumnsReportComplete> columnsReportCompletes;
+	
+	//////////////////////////////////////////////////////////////////////////////
+	// METHODS SETTERS AND GETTERS
+	//////////////////////////////////////////////////////////////////////////////
+	public Date getFromDate() {
+		return fromDate;
+	}
+	public void setFromDate(Date fromDate) {
+		this.fromDate = fromDate;
+	}
+	public Date getToDate() {
+		return toDate;
+	}
+	public void setToDate(Date toDate) {
+		this.toDate = toDate;
+	}
+	
+	public List<ColumnsReportComplete> getColumnsReportCompletes() {
+		return columnsReportCompletes;
+	}
+	public void setColumnsReportCompletes(List<ColumnsReportComplete> columnsReportCompletes) {
+		this.columnsReportCompletes = columnsReportCompletes;
+	}
+	
+
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+	
+	
+}

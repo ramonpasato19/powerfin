@@ -1,0 +1,150 @@
+package com.creditflow.model;
+import java.io.*;
+
+import java.math.*;
+import java.util.*;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.openxava.annotations.Hidden;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.ReferenceView;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.SearchAction;
+import org.openxava.annotations.Stereotype;
+import org.openxava.annotations.View;
+import org.openxava.annotations.Views;
+import javax.persistence.*;
+
+import org.openxava.annotations.*;
+import com.creditflow.model.superclass.AuditEntity;
+
+@Entity
+@Table(name="application_cost")
+//@View (members= "applicationCostId,costTotal;applicationCostDate,remark;applicationId;detail{applicationId;}")
+@View (members= "applicationCostId,costTotal;applicationCostDate,remark;detail{applicationId;}")
+//@Views({@View(members="#applicationCostId, applicationId; costTotal; applicationCostDate, remark; detail{details;}")})
+public class CostApplication extends AuditEntity implements Serializable{
+	private static final long serialVersionUID = 1L;
+	
+	@Id
+	@Hidden
+	@GeneratedValue(generator="system-uuid") 
+	@GenericGenerator(name="system-uuid", strategy = "uuid")
+	@Column(name = "application_cost_id", unique = true, nullable = false, length = 20)
+	private String applicationCostId;
+	
+	//aqui llamo a application
+	@ManyToOne	
+	@NoCreate
+	@NoModify
+	@ReferenceView( "ItemDataApplication")
+	@SearchAction("ApplicationSearchController.search")	
+	//@OnChange(ChangeApplicationAction.class)
+	@JoinColumn(name = "application_id")
+	private Application applicationId;
+	
+	//costo total
+	@Column(name="cost_total", precision=11, scale=2)
+	@Required
+	//@ReadOnly
+	private BigDecimal costTotal;
+	
+	//fecha de calculo
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="application_cost_date")
+	//@Required
+	//@ReadOnly
+	private Date applicationCostDate;
+	
+	
+	//remark
+	@Stereotype("MEMO")
+	@Column(length=150)
+	private String remark;
+	
+	
+	//@OneToMany(mappedBy="costApplication", cascade = CascadeType.ALL)
+	//@AsEmbedded
+	//@ListProperties("ApplicationItem.accountId, ApplicationItem.name]")
+	//private List<Application> details;
+	
+	/*
+	@ManyToOne	
+	@NoCreate
+	@NoModify
+	@ReferenceView( "ItemDataApplication")
+	@SearchAction("ApplicationSearchController.search")	
+	//@OnChange(ChangeApplicationAction.class)
+	@JoinColumn(name = "application_id")
+	private List<Application> application_id;
+*/
+
+	public String getApplicationCostId() {
+		return applicationCostId;
+	}
+
+
+	public void setApplicationCostId(String applicationCostId) {
+		this.applicationCostId = applicationCostId;
+	}
+
+
+
+	public BigDecimal getCostTotal() {
+		return costTotal;
+	}
+
+
+	public void setCostTotal(BigDecimal costTotal) {
+		this.costTotal = costTotal;
+	}
+
+
+	public Date getApplicationCostDate() {
+		return applicationCostDate;
+	}
+
+
+	public void setApplicationCostDate(Date applicationCostDate) {
+		this.applicationCostDate = applicationCostDate;
+	}
+
+
+	public String getRemark() {
+		return remark;
+	}
+
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+
+	public Application getApplicationId() {
+		return applicationId;
+	}
+
+
+	public void setApplicationId(Application applicationId) {
+		this.applicationId = applicationId;
+	}
+
+
+		
+	
+}

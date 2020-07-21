@@ -1,0 +1,149 @@
+package com.creditflow.model;
+import java.io.*;
+
+import java.math.*;
+import java.util.*;
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.*;
+
+import org.openxava.annotations.*;
+import com.creditflow.model.superclass.AuditEntity;
+
+@Entity
+@Table(name="application_cost")
+@View (members= "#applicationCostId,costTotal;costDate,costRemark;applicationId;detail{applicationsItems;}")
+//@Views (
+//{
+//@View (members= "applicationCostId;applicationId;costTotal,costDate,costRemark;detail{applicationsItems;}"),
+//@View (name= "Reference", members= "applicationCostId")
+//
+//}	)
+//@Tab(properties="applicationCostId,costTotal, costDate, costRemark")
+//@Views({@View(members="#applicationCostId, applicationId; costTotal; applicationCostDate, remark; detail{details;}")})
+//@Views({@View(members="applicationCostId, applicationId; costTotal; costDate, costRemark; detail{applicationsItems;}")})
+public class ApplicationCost extends AuditEntity implements Serializable{
+	private static final long serialVersionUID = 1L;
+	//id de costapplication
+	@Id
+	@Hidden
+	@GeneratedValue(generator="system-uuid") 
+	@GenericGenerator(name="system-uuid", strategy = "uuid")
+	@Column(name = "application_cost_id", unique = true, nullable = false, length = 20)
+	private String applicationCostId;
+	
+	//costo total
+	@Column(name="cost_total", precision=11, scale=2)
+	@Required
+	private BigDecimal costTotal;
+	
+	//fecha de calculo
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="cost_date")
+	private Date costDate;
+	
+	
+	//remark
+	@Stereotype("MEMO")
+	@Column(name="cost_remark",length=150)
+	private String costRemark;
+
+	
+	
+	//aqui llamo a contrato y id de application
+	//@ManyToOne
+	@ManyToOne(fetch=FetchType.LAZY, optional=false) //add 17
+	@NoCreate
+	@NoModify
+	@ReferenceView( "ItemDataApplication")
+	@SearchAction("ApplicationSearchController.search")	
+	@JoinColumn(name = "application_id")
+	private Application applicationId;
+	
+//	
+//	//relacion con table applicationCost
+//	@Transient
+//	@OneToMany(mappedBy="ApplicationCost",cascade=CascadeType.ALL)
+//	@AsEmbedded
+//	//@ListProperties("itemId,value,remark")
+//	@ListProperties("applicationItemId,itemValue,itemRemark")
+//	private List<ApplicationItem> applicationsItems;
+	//@Transient
+    @OneToMany(mappedBy="applicationCost", cascade=CascadeType.REMOVE) // Para declararla como una colección persistente
+	//@AsEmbedded
+    //@ListProperties("applicationItem.applicationItemId,applicationItem.itemValue,applicationItem.itemRemark")
+	private Collection<ApplicationItem> applicationsItems;
+
+
+    
+	
+	/*
+			@OneToMany( mappedBy="customer")     // La colección es persistente (1)
+			 //La referencia customer de Invoice se usa
+								// para mapear la relación a nivel de base de datos (2)
+			private Collection<Invoice> invoices; 	// Una colección Java convencional (3)
+	 */
+	
+//	@OneToMany(mappedBy="ApplicationCost",cascade=CascadeType.ALL)  
+//	@ListProperties("applicationItemId,itemValue,itemRemark")
+//	private Collection<ApplicationItem> applicationsItems; 
+	
+
+	
+	
+	
+	//creacion de getters y setters********************************************************
+	public String getApplicationCostId() {
+		return applicationCostId;
+	}
+
+	public void setApplicationCostId(String applicationCostId) {
+		this.applicationCostId = applicationCostId;
+	}
+
+	public BigDecimal getCostTotal() {
+		return costTotal;
+	}
+
+	public void setCostTotal(BigDecimal costTotal) {
+		this.costTotal = costTotal;
+	}
+
+	public Date getCostDate() {
+		return costDate;
+	}
+
+	public void setCostDate(Date costDate) {
+		this.costDate = costDate;
+	}
+
+	public String getCostRemark() {
+		return costRemark;
+	}
+
+	public void setCostRemark(String costRemark) {
+		this.costRemark = costRemark;
+	}
+
+	public Application getApplicationId() {
+		return applicationId;
+	}
+
+	public void setApplicationId(Application applicationId) {
+		this.applicationId = applicationId;
+	}
+
+	public Collection<ApplicationItem> getApplicationsItems() {
+		return applicationsItems;
+	}
+
+	public void setApplicationsItems(List<ApplicationItem> applicationsItems) {
+		this.applicationsItems = applicationsItems;
+	}
+	
+		
+	
+}

@@ -1,0 +1,144 @@
+package com.creditflow.model;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.openxava.annotations.DescriptionsList;
+import org.openxava.annotations.Hidden;
+import org.openxava.annotations.NoCreate;
+import org.openxava.annotations.NoModify;
+import org.openxava.annotations.OnChange;
+import org.openxava.annotations.ReadOnly;
+import org.openxava.annotations.ReferenceView;
+import org.openxava.annotations.Required;
+import org.openxava.annotations.SearchAction;
+import org.openxava.annotations.Stereotype;
+import org.openxava.annotations.View;
+
+import com.creditflow.calculators.application.ChangeApplicationAction;
+import com.creditflow.model.superclass.AuditEntity;
+
+
+@Entity
+@Table(name = "application_item")
+@View (members= "ApplicationCost.applicationCostId;itemId,itemValue;itemRemark")
+public class ApplicationItem extends AuditEntity implements Serializable{
+	private static final long serialVersionUID = 1L;
+	//identificador de applicationItem
+	@Id
+	@Hidden
+	@GeneratedValue(generator="system-uuid") 
+	@GenericGenerator(name="system-uuid", strategy = "uuid")
+	@Column(name = "application_item_id", unique = true, nullable = false, length = 20)
+	private String applicationItemId;
+	
+	//variable local valor
+	@Column(name="item_value", precision=11, scale=2)
+	@Required
+	//@ReadOnly
+	private BigDecimal itemValue;
+	
+	//variable descripcion
+	@Stereotype("MEMO")
+	@Column(name="item_remark",length=200)
+	private String itemRemark;
+	//****************************RELACIONES***********************************
+	//relacion como entidad Item
+//	@ManyToOne
+//	@JoinColumn(name = "item_id", insertable=false, updatable=false)
+//	@DescriptionsList(descriptionProperties = "name")
+//	//@NoCreate
+//	@NoModify	
+//	private Item itemId;
+//	
+//	//relacion con tabla applicationCost
+//	@ManyToOne
+//	@JoinColumn(name="application_cost_id")
+//	//@NoCreate
+//	//@NoModify
+//	//@Required
+//	@ReferenceView("Reference")
+//	private ApplicationCost applicationCost;
+
+	@ManyToOne
+	@JoinColumn(name = "item_id", insertable=false, updatable=false)
+	@DescriptionsList(descriptionProperties = "name")
+	//@NoCreate
+	@NoModify	
+	@Embedded
+	private Item itemId;
+	
+	//relacion con tabla applicationCost
+	@ManyToOne
+	//@JoinColumn(name="application_cost_id")
+	//@NoCreate
+	//@NoModify
+	//@Required
+	@ReferenceView("Reference")
+	private ApplicationCost applicationCost;
+	
+	
+
+	
+	//******************creacion de getters y setters*************************************************************
+	
+	public String getApplicationItemId() {
+		return applicationItemId;
+	}
+
+	public void setApplicationItemId(String applicationItemId) {
+		this.applicationItemId = applicationItemId;
+	}
+
+
+	public Item getItemId() {
+		return itemId;
+	}
+
+	public void setItemId(Item itemId) {
+		this.itemId = itemId;
+	}
+
+	public BigDecimal getItemValue() {
+		return itemValue;
+	}
+
+	public void setItemValue(BigDecimal itemValue) {
+		this.itemValue = itemValue;
+	}
+
+	public String getItemRemark() {
+		return itemRemark;
+	}
+
+	public void setItemRemark(String itemRemark) {
+		this.itemRemark = itemRemark;
+	}
+
+	public ApplicationCost getApplicationCost() {
+		return applicationCost;
+	}
+
+	public void setApplicationCost(ApplicationCost applicationCost) {
+		this.applicationCost = applicationCost;
+	}
+
+
+
+	
+}

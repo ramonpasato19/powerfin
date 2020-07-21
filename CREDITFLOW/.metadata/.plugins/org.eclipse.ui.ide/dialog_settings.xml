@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="CleanDialogSettings">
+		<item value="407" key="DIALOG_WIDTH"/>
+		<item value="false" key="TOGGLE_SELECTED"/>
+		<item value="393" key="DIALOG_HEIGHT"/>
+		<item value="482" key="DIALOG_X_ORIGIN"/>
+		<item value="110" key="DIALOG_Y_ORIGIN"/>
+	</section>
+	<section name="org.eclipse.ui.dialogs.FilteredResourcesSelectionDialog">
+		<item value="false" key="FilterByLocation"/>
+		<item value="true" key="ShowStatusLine"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0A;&lt;History&gt;&#x0A;&lt;historyRootNode&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/actions/InsurerWebServiceConsumerAction.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/ObservationApplication.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/i18n/portlets/EmitApplicationSingle_en.properties&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/NaturalPerson.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/superclass/AuditEntity.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/ViewInsurerWebServiceConsumer.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/openxava/naviox/model/Role.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/Addons/xava/controllers.xml&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/OpenXava/i18n/Labels_en.properties&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/OpenXava/i18n/Labels_es.properties&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/actions/application/ApplicationCompleteReportAction.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/ViewApplicationCompleteReport.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/ApplicationPerson.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/OpenXava/src/org/openxava/actions/GenerateReportAction.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/ColumnsReportComplete.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/openxava/naviox/model/SessionRecord.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/OpenXava/src/org/openxava/actions/ReportXLSAction.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/Quotation.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/src/com/creditflow/model/Application.java&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/i18n/creditflow-labels_en.properties&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/i18n/creditflow-labels_es.properties&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/xava/application.xml&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/i18n/portlets/QuotationApplicationsPeru_en.properties&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/xava/controllers.xml&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/xava/dtds/controllers.dtd&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/Servers/Tomcat v9.0 Server at localhost-config/context.xml&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/persistence/META-INF/persistence.xml&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;infoNode path=&quot;/creditflow/properties/naviox.properties&quot; type=&quot;1&quot;/&gt;&#x0A;&lt;/historyRootNode&gt;&#x0A;&lt;/History&gt;" key="History"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0A;&lt;workingSet workingSetName=&quot;&quot;/&gt;" key="WorkingSet"/>
+		<item value="false" key="ShowDerived"/>
+		<section name="DialogBoundsSettings">
+			<item value="600" key="DIALOG_WIDTH"/>
+			<item value="1|Noto Sans|8.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
+			<item value="500" key="DIALOG_HEIGHT"/>
+			<item value="727" key="DIALOG_X_ORIGIN"/>
+			<item value="223" key="DIALOG_Y_ORIGIN"/>
+		</section>
+	</section>
+</section>

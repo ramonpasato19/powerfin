@@ -1,0 +1,15 @@
+/*
+Put here your own style
+*/
+body {
+   font-size: 12px;
+}
+.ox-list-pair, .ox-list-odd {
+   height: 20px;
+}
+
+.ox-list-pair div, .ox-list-odd div, .ox-total-cell {
+    font-size: 12px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
